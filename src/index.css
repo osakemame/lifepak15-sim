@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  background: #15181c;
+  color: #e5e7eb;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+/* Bouton "matériel" : relief plastique simple (le design complet viendra à l'étape 2) */
+.btn {
+  @apply rounded-lg px-4 py-3 font-semibold border border-anthracite-600 bg-anthracite-700 text-gray-100 active:translate-y-px active:bg-anthracite-600 disabled:opacity-40;
+  box-shadow: 0 2px 0 #0b0d10, inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+.btn-primary {
+  @apply bg-choc text-black border-orange-300;
+}
+
+/* Écran stagiaire : paysage obligatoire. En portrait, on affiche une consigne. */
+.portrait-warning {
+  display: none;
+}
+@media (orientation: portrait) {
+  .trainee-root .portrait-warning {
+    display: flex;
+  }
+  .trainee-root .trainee-content {
+    display: none;
+  }
+}
