@@ -10,8 +10,8 @@ const SPEECH = {
   shockAdvised: TEXTS.shockAdvised,
   notAdvised: TEXTS.shockNotAdvised,
   ready: TEXTS.chargedLine2.replace('!', ''),
-  delivered: TEXTS.delivered,
-  rcp: TEXTS.startCpr,
+  // « Energie délivrée » : affichage seulement, pas de voix (demande de l'utilisateur)
+  rcp: 'Commencer la RCP', // la voix dit « commencer la RCP » ; l'écran affiche « Débuter RCP »
   awaitAnalyse: TEXTS.pressAnalyse,
 };
 
@@ -49,30 +49,47 @@ export function useDsaAudio({ s, host }) {
   // --- Pompe PNI ---
   useEffect(() => {
     if (s.pni.status === 'measuring') audio.startPump();
-    else audio.stopPump(s.pni.status === 'done');
+    else audio.stopPump();
     return () => audio.stopPump();
   }, [s.pni.status]);
 
-  // --- Métronome RCP : 100 par minute ; avec « Abs. voies aér. » une pause après 30 (ad.) ou 15 (pédi.) compressions ---
+  // --- Métronome RCP : 100 par minute, en continu tant qu'il n'est pas arrêté (menu RCP ou extinction).
+  // Modes « Abs. voies aér. » (30:2 adulte, 15:2 pédiatrique), d'après rcp_bip.mp3 :
+  //   la 3e compression avant la fin est remplacée par une cloche en 3 temps, puis après la dernière compression,
+  //   2 insufflations (son grave de 1,2 s) pendant que le métronome continue en fond à bas volume.
   useEffect(() => {
     if (!s.metronome || s.phase === 'off') return undefined;
     const mode = RCP_MODES[s.rcpMode] ?? RCP_MODES['ad-abs'];
     const everyMs = 60000 / METRONOME_BPM;
-    const cycle = mode.ratio ? Number(mode.ratio.split(':')[0]) : 0; // compressions avant la pause de ventilation
+    const cycle = mode.ratio ? Number(mode.ratio.split(':')[0]) : 0; // compressions avant les insufflations
     let count = 0;
-    let timer = null;
+    const timers = new Set();
+    const later = (fn, ms) => {
+      const id = setTimeout(() => {
+        timers.delete(id);
+        fn();
+      }, ms);
+      timers.add(id);
+    };
     const tick = () => {
-      audio.metronomeClick();
       count += 1;
+      if (cycle && count === cycle - 2) audio.bell();
+      else audio.metronomeClick();
       if (cycle && count >= cycle) {
         count = 0;
-        timer = setTimeout(tick, everyMs + TIMINGS.ventilationPause);
+        const start = everyMs; // les insufflations commencent au battement suivant
+        later(() => audio.ventTone(TIMINGS.ventilationTone), start);
+        later(() => audio.ventTone(TIMINGS.ventilationTone), start + TIMINGS.ventilationEvery);
+        for (let k = 1; k * everyMs < TIMINGS.ventilationPause - everyMs / 2; k += 1) {
+          later(() => audio.metronomeClick(true), start + k * everyMs);
+        }
+        later(tick, everyMs + TIMINGS.ventilationPause);
       } else {
-        timer = setTimeout(tick, everyMs);
+        later(tick, everyMs);
       }
     };
     tick();
-    return () => clearTimeout(timer);
+    return () => timers.forEach((id) => clearTimeout(id));
   }, [s.metronome, s.rcpMode, s.phase === 'off']);
 
   // --- Bip du pouls, synchronisé sur le tracé ---

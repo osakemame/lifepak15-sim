@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useHostSession } from '../hooks/useHostSession.js';
 import { useWakeLock } from '../hooks/useWakeLock.js';
 import { saveSession } from '../services/session.js';
@@ -6,6 +6,8 @@ import { mspLabel } from '../scenarios/mspTypes.js';
 import StatusBadge from '../components/StatusBadge.jsx';
 import Diagnostic from '../components/Diagnostic.jsx';
 import TrainerPanel from '../components/TrainerPanel.jsx';
+import { advance, applyRhythm } from '../engine/ramps.js';
+import { RHYTHMS } from '../engine/rhythms.js';
 
 const card = 'rounded-xl bg-anthracite-800 border border-anthracite-600 p-4';
 
@@ -57,6 +59,31 @@ export default function TrainerPage({ pin: savedPin, resume, mspType, onQuit }) 
   const [confirm, setConfirm] = useState(null); // 'end' | 'clear' | null
 
   useWakeLock(true);
+
+  // --- Évolutions progressives et changements de rythme programmés : avancent avec l'horloge ---
+  const hostRef = useRef(host);
+  hostRef.current = host;
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const { patch, events } = advance(hostRef.current, Date.now());
+      if (!patch) return;
+      setHost((h) => ({ ...h, ...patch }));
+      events.forEach((e) => logLocal(e.action, e.detail));
+    }, 500);
+    return () => clearInterval(timer);
+  }, [setHost, logLocal]);
+
+  // --- Rythme après un choc délivré (réglé dans le scénario) ---
+  const prevShocks = useRef(0);
+  useEffect(() => {
+    const n = traineeStatus?.shocksDelivered ?? 0;
+    const after = hostRef.current.dsa.afterShock;
+    if (n > prevShocks.current && after && after !== 'keep') {
+      setHost((h) => applyRhythm(h, after));
+      logLocal('Rythme', `Après le choc n°${n} : ${RHYTHMS[after]?.label}`);
+    }
+    prevShocks.current = n;
+  }, [traineeStatus?.shocksDelivered, setHost, logLocal]);
 
   // Mémorise la session pour la reprise automatique après rafraîchissement
   useEffect(() => {
@@ -143,7 +170,7 @@ export default function TrainerPage({ pin: savedPin, resume, mspType, onQuit }) 
             </div>
           </section>
 
-          <TrainerPanel host={host} setHost={setHost} />
+          <TrainerPanel host={host} setHost={setHost} logLocal={logLocal} />
 
           <section className={card}>
             <div className="mb-2 flex items-center justify-between">

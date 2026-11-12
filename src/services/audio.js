@@ -2,8 +2,14 @@
 // Tout est synthétisé : aucun fichier audio. Les fréquences marquées PROVISOIRE sont à ajuster ici.
 
 export const SOUND = {
-  metronomeHz: 883, // relevé sur la vidéo (votre description donnait 1000 Hz : à trancher)
-  metronomeMs: 70,
+  // Relevés sur vos enregistrements (rcp_bip.mp3) : clic de 35 ms à 883 Hz toutes les 0,6 s ;
+  // cloche (2885 + 1098 Hz) sur la 3e compression avant la fin ; insufflations : 330 Hz pendant 1,2 s.
+  metronomeHz: 883,
+  metronomeMs: 35,
+  bellHz: 2885,
+  bellHz2: 1098,
+  ventHz: 330,
+  ventMs: 1200,
   chargeFrom: 400, // balayage de la charge, indiqué par l'utilisateur : 400 -> 1200 Hz
   chargeTo: 1200,
   readyHz: 1200, // PROVISOIRE : tonalité « prêt » (bips répétés tant que le choc n'est pas délivré)
@@ -35,6 +41,7 @@ function ensure() {
 // À appeler lors d'un geste de l'utilisateur (les navigateurs bloquent le son avant)
 export function unlockAudio() {
   const c = ensure();
+  loadPni();
   if (c && c.state === 'suspended') c.resume().catch(() => {});
   try {
     window.speechSynthesis?.resume();
@@ -81,9 +88,36 @@ export function beepPulse(spo2 = 100) {
   tone(f, SOUND.beepMs, { gain: 0.45 });
 }
 
-// Clic du métronome RCP
-export function metronomeClick() {
-  tone(SOUND.metronomeHz, SOUND.metronomeMs, { gain: 0.7 });
+// Clic du métronome RCP (faint = fond sonore pendant les insufflations, environ 30 % du volume)
+export function metronomeClick(faint = false) {
+  tone(SOUND.metronomeHz, SOUND.metronomeMs, { gain: faint ? 0.12 : 0.4 });
+}
+
+// Cloche d'avertissement « en 3 temps » avant les insufflations (3 frappes rapprochées)
+export function bell() {
+  [0, 0.3, 0.47].forEach((when, i) => {
+    const g = [0.7, 0.4, 0.35][i];
+    tone(SOUND.bellHz, 280, { gain: g, when });
+    tone(SOUND.bellHz2, 280, { gain: g * 0.25, when });
+  });
+}
+
+// Insufflation : son grave de 1,2 s qui s'atténue
+export function ventTone(ms = SOUND.ventMs) {
+  const c = ensure();
+  if (!c || muted) return;
+  const t0 = c.currentTime;
+  const o = c.createOscillator();
+  const g = c.createGain();
+  o.type = 'sine';
+  o.frequency.value = SOUND.ventHz;
+  g.gain.setValueAtTime(0, t0);
+  g.gain.linearRampToValueAtTime(0.65, t0 + 0.01);
+  g.gain.linearRampToValueAtTime(0.3, t0 + ms / 1000 - 0.02);
+  g.gain.linearRampToValueAtTime(0, t0 + ms / 1000);
+  o.connect(g).connect(master);
+  o.start(t0);
+  o.stop(t0 + ms / 1000 + 0.02);
 }
 
 // Charge : tonalité qui monte de 400 à 1200 Hz pendant la durée de la charge
@@ -151,18 +185,61 @@ export function shockClack() {
   tone(140, 90, { type: 'square', gain: 0.5 });
 }
 
-// Pompe du brassard PNI (PROVISOIRE) : petits à-coups de moteur pendant la mesure, souffle à la fin
+// Pompe du brassard PNI : votre enregistrement (public/sounds/pni.mp3, ≈ 6 s), joué au début de la mesure.
+// Si le fichier ne peut pas être chargé, on joue un bruit de moteur synthétique.
+let pniBuffer = null;
+let pniLoading = false;
+let pniSrc = null;
+function loadPni() {
+  if (pniBuffer || pniLoading) return;
+  const c = ensure();
+  if (!c) return;
+  pniLoading = true;
+  let base = '/';
+  try {
+    base = import.meta.env.BASE_URL || '/';
+  } catch {
+    /* hors Vite (tests) */
+  }
+  fetch(`${base}sounds/pni.mp3`)
+    .then((r) => r.arrayBuffer())
+    .then((ab) => c.decodeAudioData(ab))
+    .then((buf) => {
+      pniBuffer = buf;
+    })
+    .catch(() => {
+      pniLoading = false;
+    });
+}
 let pumpTimer = null;
 export function startPump() {
   stopPump();
+  loadPni();
+  const c = ensure();
+  if (c && pniBuffer && !muted) {
+    pniSrc = c.createBufferSource();
+    pniSrc.buffer = pniBuffer;
+    const g = c.createGain();
+    g.gain.value = 6; // l'enregistrement est très faible (crête à -21 dB)
+    pniSrc.connect(g).connect(master);
+    pniSrc.start();
+    return;
+  }
   const hit = () => noise(160, { gain: 0.35, lowpass: 600 });
   hit();
   pumpTimer = setInterval(hit, 420);
 }
-export function stopPump(release = false) {
+export function stopPump() {
   if (pumpTimer) clearInterval(pumpTimer);
   pumpTimer = null;
-  if (release) noise(700, { gain: 0.3, lowpass: 2500 });
+  if (pniSrc) {
+    try {
+      pniSrc.stop();
+    } catch {
+      /* déjà arrêté */
+    }
+    pniSrc = null;
+  }
 }
 
 // ---------- Voix ----------

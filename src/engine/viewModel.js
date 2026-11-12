@@ -11,9 +11,10 @@ export const formatCountdown = (sec) => `${Math.floor(sec / 60)}:${pad2(sec % 60
 //   câble ECG 4 brins -> « FC » vert ; capteur SpO2 -> « FP (SpO2) » bleu ;
 //   mesure PNI seule -> « FP (PNI) » blanc ; rien -> « FC » vert avec « --- ».
 function heartBlock(c, v, s) {
-  if (c.ecgLeads) return { label: 'FC', color: 'green', value: v.hr };
-  if (c.spo2) return { label: 'FP (SpO2)', color: 'blue', value: v.hr };
-  if (s.pni.status === 'done') return { label: 'FP (PNI)', color: 'white', value: v.hr };
+  const hr = v.hr > 0 ? v.hr : null; // FC à 0 (FV, asystolie) : « --- »
+  if (c.ecgLeads) return { label: 'FC', color: 'green', value: hr };
+  if (c.spo2) return { label: 'FP (SpO2)', color: 'blue', value: hr };
+  if (s.pni.status === 'done') return { label: 'FP (PNI)', color: 'white', value: hr };
   return { label: 'FC', color: 'green', value: null };
 }
 

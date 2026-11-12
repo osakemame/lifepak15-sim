@@ -17,6 +17,10 @@ export const RHYTHMS = {
 
 export const DEFAULT_RHYTHM = 'sinus';
 
+// FC type proposée quand on choisit un rythme (le formateur peut ensuite la modifier).
+// FV et asystolie : 0 (l'écran affiche alors « --- »). À confirmer avec l'utilisateur.
+export const RHYTHM_HR = { sinus: 75, tachy: 140, brady: 38, stemi: 85, bav: 36, tv: 190, fv: 0, asystolie: 0, aesp: 60 };
+
 const g = (x, c, w) => Math.exp(-((x - c) * (x - c)) / (2 * w * w));
 
 // Un battement sinusal complet sur une phase de 0 à 1 (onde P, QRS, onde T)

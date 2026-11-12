@@ -49,7 +49,6 @@ const startAnalysis = (s) => ({
   ...s,
   phase: 'analysing',
   analyses: s.analyses + 1,
-  metronome: false,
   menuOpen: false,
 });
 
@@ -74,8 +73,8 @@ export function reducer(s, a) {
     case 'ANALYSE_PRESS':
       if (ANALYSE_BLOCKED.includes(s.phase)) return s;
       // Premier appui : l'appareil passe sur les palettes (message « Mise en route dériv palettes »)
-      if (!s.padsLead) return { ...s, phase: 'padsStart', padsLead: true, metronome: false, menuOpen: false };
-      return a.attached ? startAnalysis(s) : { ...s, phase: 'padsWait', metronome: false, menuOpen: false };
+      if (!s.padsLead) return { ...s, phase: 'padsStart', padsLead: true, menuOpen: false };
+      return a.attached ? startAnalysis(s) : { ...s, phase: 'padsWait', menuOpen: false };
 
     case 'PADS_PROMPT':
       if (s.phase !== 'padsStart') return s;
@@ -117,7 +116,7 @@ export function reducer(s, a) {
       const left = s.rcpRemaining - 1;
       return left > 0
         ? { ...s, rcpRemaining: left }
-        : { ...s, phase: 'awaitAnalyse', rcpRemaining: 0, metronome: false };
+        : { ...s, phase: 'awaitAnalyse', rcpRemaining: 0 };
     }
 
     case 'RCP_MENU':

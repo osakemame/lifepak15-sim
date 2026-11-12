@@ -3,7 +3,7 @@
 Application web de simulation d'un moniteur-défibrillateur LIFEPAK 15 en **mode DSA** (semi-automatique) pour la formation secourisme.
 Deux écrans reliés en temps réel : **Stagiaire** (face avant du LIFEPAK 15, paysage) et **Formateur** (télécommande, portrait).
 
-**État : étape 3 sur 5** — écran du stagiaire, séquence DSA, tracés animés, sons et voix.
+**État : étape 4 sur 5** — écran du stagiaire (DSA, tracés, sons, voix) et télécommande du formateur complète.
 
 ## Feuille de route
 
@@ -12,14 +12,22 @@ Deux écrans reliés en temps réel : **Stagiaire** (face avant du LIFEPAK 15, p
 | 1 | Squelette React/Vite/Tailwind, hub, liaison PeerJS, reconnexion | fait |
 | 2 | Écran Stagiaire (face avant, séquence DSA, PNI), panneau de test formateur, journal | **fait** |
 | 3 | Tracés animés (ECG, pléthysmographie SpO2) et sons / voix | **fait** |
-| 4 | Télécommande Formateur complète (rampes de constantes, rythmes, événements) | à venir |
+| 4 | Télécommande Formateur complète (rampes de constantes, rythmes, remarques) | **fait** |
 | 5 | Scénarios (MSP), enregistrement sur Netlify, débriefing | à venir |
+
+## Ajouts de l'étape 4 : télécommande du formateur
+
+- **Rythme** : 9 rythmes ; appliqué tout de suite ou **programmé dans N secondes**. La FC prend la valeur type du rythme (FV et asystolie : 0, l'écran affiche « --- »), modifiable ensuite.
+- **Constantes** (FC, SpO2, PNI systolique et diastolique) : valeur imposée avec − / +, ou **évolution progressive** : valeur à atteindre, durée (min + s) et départ différé. Exemple : SpO2 95 → 80 en 3 min. Les évolutions en cours s'affichent avec leur avancement et un bouton Annuler. Imposer une valeur à la main annule l'évolution de cette constante. Les évolutions suivent l'horloge du formateur : elles reprennent après un rafraîchissement de sa page.
+- **Scénario DSA** : nombre de chocs conseillés à la suite, résultat imposé pour la prochaine analyse, **rythme appliqué après un choc** (option), remise à zéro de l'écran du stagiaire.
+- **Remarque pour le débriefing** : une ligne libre ajoutée au journal.
+- Toutes ces actions sont inscrites dans le journal (source « Formateur »).
 
 ## Ajouts de l'étape 3
 
 - **Tracés animés** (balayage de gauche à droite) : 1 ECG + 2 tracés SpO2 identiques. Rythmes : sinusal, tachycardie sinusale, bradycardie sinusale sévère, STEMI, BAV complet, TV, FV, asystolie, AESP (`src/engine/rhythms.js`). Le rythme se choisit pour l'instant dans un menu provisoire de la page formateur. Sans pouls (FV, asystolie, AESP) le tracé SpO2 est plat.
-- **Sons** (Web Audio, `src/services/audio.js`) : bip du pouls synchronisé sur le tracé (hauteur qui baisse avec la SpO2), métronome RCP 100/min, charge 400 → 1200 Hz, tonalité « prêt », « clac » du choc, pompe PNI.
-- **Voix** (synthèse vocale du navigateur, français) : mêmes phrases que l'écran : « Connectez les électrodes », « Analyse en cours, reculez vous », « Choc conseillé », « Choc non conseillé », « Appuyer bouton CHOC », « Energie délivrée », « Débuter RCP », « Appuyer sur ANALYSE ».
+- **Sons** (Web Audio, `src/services/audio.js`) : bip du pouls synchronisé sur le tracé (hauteur qui baisse avec la SpO2), charge 400 → 1200 Hz, tonalité « prêt », « clac » du choc. Métronome RCP et pompe PNI reproduits d'après vos enregistrements : métronome 883 Hz toutes les 0,6 s ; modes « Abs. voies aér. » : cloche en 3 temps sur la 3e compression avant la fin, puis 2 insufflations graves (330 Hz, 1,2 s) pendant que le métronome continue en fond ; pompe PNI = votre fichier `public/sounds/pni.mp3`. Le métronome ne s'arrête que par « Arrêter métronome » ou à l'extinction (il continue pendant l'analyse, après un choc et après les 2 minutes).
+- **Voix** (synthèse vocale du navigateur, français) : mêmes phrases que l'écran : « Connectez les électrodes », « Analyse en cours, reculez vous », « Choc conseillé », « Choc non conseillé », « Appuyer bouton CHOC », « Appuyer sur ANALYSE ». « Energie délivrée » : pas de voix. Pour « Débuter RCP » affiché, la voix dit « commencer la RCP ».
 - **Son** : les navigateurs exigent un toucher avant de jouer un son (message « Touchez l'écran pour activer le son ») ; bouton « Son activé / coupé » en haut.
 - **MARCHE** : le stagiaire éteint l'appareil (écran noir, tout est effacé, y compris le métronome) et le rallume (retour au début de la session, selon les réglages du formateur à cet instant).
 - **RCP** : menu « Métronome RCP » (5 choix) ; la LED RCP reste allumée dès le 1er appui jusqu'à l'extinction.
@@ -63,8 +71,8 @@ L'écran déduit seul ce qu'il affiche de ce qui est branché (le formateur peut
 - Menu RCP : les 5 choix se touchent directement à l'écran (l'appareil réel utilise les touches latérales de l'écran).
 - PAM calculée par la formule classique ; l'appareil réel donne des valeurs légèrement différentes.
 - Pas de limite de temps entre « 200J disponibles » et l'appui sur CHOC.
-- Sons : métronome à 883 Hz (relevé sur la vidéo ; votre description disait 1000 Hz) ; tonalité « prêt », bip du pouls, pompe PNI et « clac » : réglages provisoires dans `src/services/audio.js`.
-- Modes « Abs. voies aér. » (30:2 et 15:2) : pause de 5 s du métronome après 30 (ou 15) compressions, valeur provisoire (`ventilationPause` dans `dsaTimings.js`).
+- Sons : tonalité « prêt », bip du pouls et « clac » : estimations provisoires dans `src/services/audio.js`.
+- Cloche et insufflations : reproduites d'après un enregistrement court ; le nombre de compressions avant la cloche (30 adulte, 15 pédiatrique) est supposé.
 - Les formes des rythmes sont des approximations pédagogiques.
 
 ## Lancer en local

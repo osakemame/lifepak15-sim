@@ -13,8 +13,11 @@ export const defaultHostState = (mspType = null) => ({
   // Constantes du patient. Valeurs de départ modifiables ; PA normale adulte = 120/80 (choix utilisateur).
   vitals: { hr: 75, spo2: 98, sys: 120, dia: 80 },
   rhythm: 'sinus', // rythme affiché sur le tracé ECG (voir engine/rhythms.js)
+  ramps: [], // évolutions progressives en cours (engine/ramps.js)
+  scheduled: [], // changements de rythme programmés
   // Scénario DSA
   dsa: {
+    afterShock: 'keep', // rythme appliqué après un choc délivré ('keep' = inchangé)
     shocksPlanned: 1, // nombre d'analyses « choc conseillé » avant « choc non conseillé »
     forceNext: 'auto', // 'auto' | 'advised' | 'not' : résultat imposé pour la prochaine analyse
     forceId: 0, // change à chaque nouveau forçage
@@ -31,6 +34,8 @@ export function normalizeHostState(raw) {
     connections: { ...d.connections, ...(raw?.connections ?? {}) },
     vitals: { ...d.vitals, ...(raw?.vitals ?? {}) },
     dsa: { ...d.dsa, ...(raw?.dsa ?? {}) },
+    ramps: Array.isArray(raw?.ramps) ? raw.ramps : [],
+    scheduled: Array.isArray(raw?.scheduled) ? raw.scheduled : [],
   };
 }
 
