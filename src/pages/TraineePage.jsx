@@ -17,7 +17,11 @@ const TOP_BAR = 34; // hauteur réservée à la barre du haut (px)
 function toggleFullscreen() {
   try {
     if (document.fullscreenElement) document.exitFullscreen();
-    else document.documentElement.requestFullscreen?.();
+    else {
+      const r = document.documentElement.requestFullscreen?.();
+      // Verrouille le paysage quand le navigateur le permet (Android, application installée)
+      Promise.resolve(r).then(() => screen.orientation?.lock?.('landscape')).catch(() => {});
+    }
   } catch {
     /* plein écran indisponible : on ignore */
   }

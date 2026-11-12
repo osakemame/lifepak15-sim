@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Footer from '../components/Footer.jsx';
+import InstallButton from '../components/InstallButton.jsx';
 import { isValidPin } from '../services/session.js';
 
 // Page d'accueil : le formateur crée une session, le stagiaire la rejoint avec le code à 4 chiffres.
@@ -24,6 +25,7 @@ export default function Hub({ initialPin = '', onCreate, onJoin }) {
           <button className="btn" onClick={() => setMode('join')}>
             Rejoindre une session (Stagiaire)
           </button>
+          <InstallButton />
         </div>
       )}
 

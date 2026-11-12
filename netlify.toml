@@ -12,3 +12,14 @@
   from = "/*"
   to = "/index.html"
   status = 200
+
+# Service worker : toujours rechargé (pour que les mises à jour arrivent)
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"

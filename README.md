@@ -154,3 +154,15 @@ SpO2 normale : 94 à 100 %. PA normale de l'adulte retenue pour la simulation : 
 
 ---
 SDIS 24 - LTN H. BRU - CIS Sarlat
+
+## Installation sur téléphone / tablette (PWA)
+
+L'application est installable comme une vraie application (icône sur l'écran d'accueil, plein écran, démarrage rapide).
+
+- **Android (Chrome)** : ouvrir le site, puis bouton **Installer l'application** de l'accueil (ou menu ⋮ → *Installer l'application*).
+- **iPhone / iPad (Safari)** : bouton **Partager** → **Sur l'écran d'accueil**.
+- **Ordinateur (Chrome / Edge)** : icône d'installation dans la barre d'adresse.
+
+Fichiers concernés : `public/manifest.webmanifest`, `public/sw.js` (service worker), `public/icons/`, `src/components/InstallButton.jsx`, en-têtes dans `netlify.toml`.
+La liaison formateur ↔ stagiaire et les scénarios partagés nécessitent toujours une connexion Internet.
+Mise à jour : à chaque nouveau déploiement, l'application récupère la dernière version à l'ouverture suivante (fermer/rouvrir l'application une ou deux fois).
