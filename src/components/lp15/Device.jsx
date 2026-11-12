@@ -59,7 +59,7 @@ export default function Device({ view, actions, reserveTop = 0 }) {
 
         {/* Écran */}
         <div className="lp-bezel">
-          <Screen view={view} />
+          <Screen view={view} onRcpPick={actions.rcpChoose} />
         </div>
         <i className="lp-screw" style={{ left: 200, top: 712 }} />
         <i className="lp-screw" style={{ left: 968, top: 712 }} />

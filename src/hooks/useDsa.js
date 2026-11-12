@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useReducer, useRef } from 'react';
-import { RCP_MODES, SHOCK_JOULES } from '../engine/lp15Texts.js';
+import { RCP_MODES, RCP_STOP_LABEL, SHOCK_JOULES } from '../engine/lp15Texts.js';
 import { TIMINGS } from '../engine/dsaTimings.js';
 import { cuffAt, decideAdvised, initialState, reducer } from '../engine/dsaMachine.js';
 
@@ -159,7 +159,7 @@ export function useDsa({ host, log, report }) {
 
   // --- Les 4 boutons actifs du stagiaire : RCP, ANALYSE, CHOC, PNI ---
   const analyse = useCallback(() => {
-    if (s.phase !== 'surveillance' && s.phase !== 'awaitAnalyse') return;
+    if (['padsStart', 'padsWait', 'analysing', 'blank'].includes(s.phase)) return;
     logRef.current?.('ANALYSE', 'Appui sur ANALYSE');
     dispatch({
       type: 'ANALYSE_PRESS',
@@ -173,11 +173,18 @@ export function useDsa({ host, log, report }) {
     dispatch({ type: 'SHOCK_PRESS' });
   }, [s.phase, s.shocksDelivered]);
 
+  // Bouton RCP : ouvre / ferme le menu des 5 choix de métronome (affiché sur l'écran du stagiaire)
   const rcp = useCallback(() => {
-    const mode = RCP_MODES[hostRef.current.dsa.rcpMode] ?? RCP_MODES['ad-abs'];
-    logRef.current?.('RCP', s.metronome ? 'Métronome arrêté' : `Métronome démarré (${mode.menu})`);
-    dispatch({ type: 'METRO_TOGGLE' });
-  }, [s.metronome]);
+    dispatch({ type: 'RCP_MENU' });
+  }, []);
+
+  const rcpChoose = useCallback((mode) => {
+    logRef.current?.(
+      'RCP',
+      mode === 'stop' ? `Menu RCP : ${RCP_STOP_LABEL}` : `Menu RCP : ${RCP_MODES[mode].menu} (métronome démarré)`
+    );
+    dispatch({ type: 'RCP_CHOOSE', mode });
+  }, []);
 
   const pni = useCallback(() => {
     if (s.pni.status === 'measuring') return;
@@ -198,5 +205,5 @@ export function useDsa({ host, log, report }) {
     lastPni.current = s.pni.status;
   }, [s.pni.status, s.pni.sys, s.pni.dia, s.pni.map]);
 
-  return { s, actions: { analyse, shock, rcp, pni } };
+  return { s, actions: { analyse, shock, rcp, pni, rcpChoose } };
 }

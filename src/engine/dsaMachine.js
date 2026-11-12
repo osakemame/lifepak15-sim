@@ -18,6 +18,8 @@ export const initialState = () => ({
   analyses: 0, // nombre d'analyses lancées
   shocksDelivered: 0,
   metronome: false,
+  rcpMode: 'ad-abs', // dernier mode de métronome choisi par le stagiaire
+  menuOpen: false, // menu du bouton RCP affiché
   charge: 0, // joules affichés pendant la charge
   rcpRemaining: 0, // secondes restantes du compte à rebours RCP
   consumedForceId: 0, // dernier forçage du formateur déjà appliqué
@@ -42,7 +44,17 @@ export function decideAdvised(host, s) {
   return { advised: s.shocksDelivered < shocksPlanned, forceId: s.consumedForceId };
 }
 
-const startAnalysis = (s) => ({ ...s, phase: 'analysing', analyses: s.analyses + 1, metronome: false });
+const startAnalysis = (s) => ({
+  ...s,
+  phase: 'analysing',
+  analyses: s.analyses + 1,
+  metronome: false,
+  menuOpen: false,
+});
+
+// ANALYSE peut être appuyé à tout moment, sauf pendant le démarrage, l'attente des électrodes,
+// l'analyse elle-même et l'instant du choc.
+const ANALYSE_BLOCKED = ['padsStart', 'padsWait', 'analysing', 'blank'];
 
 export function reducer(s, a) {
   switch (a.type) {
@@ -50,10 +62,10 @@ export function reducer(s, a) {
       return initialState();
 
     case 'ANALYSE_PRESS':
-      if (s.phase !== 'surveillance' && s.phase !== 'awaitAnalyse') return s;
+      if (ANALYSE_BLOCKED.includes(s.phase)) return s;
       // Premier appui : l'appareil passe sur les palettes (message « Mise en route dériv palettes »)
-      if (!s.padsLead) return { ...s, phase: 'padsStart', padsLead: true, metronome: false };
-      return a.attached ? startAnalysis(s) : { ...s, phase: 'padsWait', metronome: false };
+      if (!s.padsLead) return { ...s, phase: 'padsStart', padsLead: true, metronome: false, menuOpen: false };
+      return a.attached ? startAnalysis(s) : { ...s, phase: 'padsWait', metronome: false, menuOpen: false };
 
     case 'PADS_PROMPT':
       if (s.phase !== 'padsStart') return s;
@@ -87,8 +99,8 @@ export function reducer(s, a) {
       return s.phase === 'blank' ? { ...s, phase: 'delivered' } : s;
 
     case 'TO_RCP':
-      // Le métronome démarre tout seul avec « Débuter RCP » (constaté sur la vidéo)
-      return { ...s, phase: 'rcp', rcpRemaining: a.seconds, metronome: true };
+      // Le métronome ne démarre pas tout seul : le stagiaire le lance avec le bouton RCP
+      return { ...s, phase: 'rcp', rcpRemaining: a.seconds };
 
     case 'RCP_TICK': {
       if (s.phase !== 'rcp') return s;
@@ -98,8 +110,16 @@ export function reducer(s, a) {
         : { ...s, phase: 'awaitAnalyse', rcpRemaining: 0, metronome: false };
     }
 
-    case 'METRO_TOGGLE':
-      return s.phase === 'analysing' ? s : { ...s, metronome: !s.metronome };
+    case 'RCP_MENU':
+      if (s.phase === 'analysing' || s.phase === 'blank') return s;
+      return { ...s, menuOpen: !s.menuOpen };
+
+    case 'RCP_CHOOSE':
+      // a.mode : clé de RCP_MODES, ou 'stop' (« Arrêter métronome »)
+      if (s.phase === 'analysing' || s.phase === 'blank') return s;
+      return a.mode === 'stop'
+        ? { ...s, metronome: false, menuOpen: false }
+        : { ...s, metronome: true, rcpMode: a.mode, menuOpen: false };
 
     case 'PNI_START':
       return s.pni.status === 'measuring' ? s : { ...s, pni: { ...s.pni, status: 'measuring', cuff: 20 } };

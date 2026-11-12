@@ -31,11 +31,12 @@ export const TEXTS = {
   },
 };
 
-// Modes du métronome RCP (menu vu sur la vidéo). Le formateur choisit le mode dans le scénario.
+// Modes du métronome RCP. Le STAGIAIRE les choisit dans le menu qui s'ouvre avec le bouton RCP
+// (5 choix, dont « Arrêter métronome »). Libellés du menu fournis par l'utilisateur.
 // Libellé du bandeau : seul le premier a été vu sur l'appareil, les autres sont PROVISOIRES.
 export const RCP_MODES = {
   'ad-abs': {
-    menu: 'Ad. - Abs. voies aér.',
+    menu: 'Ad. - Abs. voies Aér.',
     band: 'RCP: Ad. - Abs. voies aér.  30:2',
     ratio: '30:2',
     provisional: false,
@@ -47,7 +48,7 @@ export const RCP_MODES = {
     provisional: true,
   },
   'ped-abs': {
-    menu: 'Pédi. - Abs. voies aér.',
+    menu: 'Pédi. - Abs. voies Aér.',
     band: 'RCP: Pédi. - Abs. voies aér.  15:2',
     ratio: '15:2',
     provisional: true,
@@ -59,6 +60,8 @@ export const RCP_MODES = {
     provisional: true,
   },
 };
+
+export const RCP_STOP_LABEL = 'Arrêter métronome'; // 5e choix du menu : coupe le métronome, sans bruit
 
 export const METRONOME_BPM = 100; // compressions par minute (indiqué par l'utilisateur)
 export const SHOCK_JOULES = 200; // énergie fixe en DSA (indiqué par l'utilisateur)

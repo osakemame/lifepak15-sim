@@ -1,5 +1,4 @@
 import React from 'react';
-import { RCP_MODES } from '../engine/lp15Texts.js';
 
 // Panneau de commande PROVISOIRE du formateur (étape 2) : juste ce qu'il faut pour tester
 // l'écran du stagiaire. La vraie télécommande (rampes de constantes, rythmes, événements)
@@ -113,21 +112,6 @@ export default function TrainerPanel({ host, setHost }) {
             ))}
           </div>
         </div>
-        <label className="block text-sm">
-          Métronome RCP
-          <select
-            value={host.dsa.rcpMode}
-            onChange={(e) => setDsa({ rcpMode: e.target.value })}
-            className="mt-1 w-full rounded-lg bg-anthracite-700 border border-anthracite-600 p-3"
-          >
-            {Object.entries(RCP_MODES).map(([key, m]) => (
-              <option key={key} value={key}>
-                {m.menu}
-                {m.provisional ? ' (texte provisoire)' : ''}
-              </option>
-            ))}
-          </select>
-        </label>
         <button type="button" className="btn w-full" onClick={reset}>
           Remettre l'écran du stagiaire à zéro
         </button>

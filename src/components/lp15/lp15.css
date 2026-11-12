@@ -118,6 +118,11 @@
 .lp-btn .led + .lbl {
   margin-left: 14px;
 }
+.lp-btn.analyse .led + .lbl,
+.lp-btn.amber .led + .lbl {
+  margin-left: 22px;
+  font-size: 17px;
+}
 .lp-btn .led.on {
   background: #55ff74;
   box-shadow: 0 0 9px #55ff74, inset 0 0 2px #fff;
@@ -700,3 +705,36 @@
 .lcd-band:empty {
   display: none;
 }
+
+/* Menu du bouton RCP (5 choix de métronome) */
+.lcd-menu {
+  left: 214px;
+  top: 120px;
+  width: 400px;
+  display: flex;
+  flex-direction: column;
+  background: #565d63;
+  box-shadow: 0 0 0 2px #1d242c;
+  z-index: 5;
+}
+.lcd-menu-title {
+  position: static;
+  height: 40px;
+  line-height: 40px;
+  text-align: center;
+  color: #ffd23c;
+  font-size: 28px;
+}
+.lcd-menu-item {
+  height: 62px;
+  border: 0;
+  border-top: 2px solid #1d242c;
+  background: #a9afb3;
+  color: #fff;
+  font: inherit;
+  font-size: 28px;
+  text-align: left;
+  padding: 0 20px;
+  cursor: pointer;
+}
+.lcd-menu-item.active { background: #2f6fd0; }

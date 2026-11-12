@@ -1,7 +1,7 @@
 // Traduit (état du formateur + état de la machine DSA + heure) en « ce qu'affiche l'écran ».
 // Fonction pure : l'écran (components/lp15/Screen.jsx) ne contient aucune logique métier.
 
-import { RCP_MODES, SHOCK_JOULES, TEXTS } from './lp15Texts.js';
+import { RCP_MODES, RCP_STOP_LABEL, SHOCK_JOULES, TEXTS } from './lp15Texts.js';
 
 const pad2 = (n) => String(n).padStart(2, '0');
 export const formatClock = (d) => `${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;
@@ -66,13 +66,13 @@ function modalFor(s) {
 }
 
 // Lignes du bandeau d'état (deux lignes visibles au maximum, comme sur l'appareil).
-function bandLines(c, s, rcpMode, hasModal) {
+function bandLines(c, s, hasModal) {
   const lines = [];
   if (s.phase === 'padsStart') lines.push(TEXTS.band.padsStart);
   // « SpO2: Capteur non détecté » n'apparaît que lorsqu'une fenêtre est affichée (vu sur les vidéos)
   if (!c.spo2 && hasModal) lines.push(TEXTS.band.spo2NoSensor);
-  // La ligne RCP apparaît avec le compte à rebours RCP, ou quand le métronome est actif.
-  if (s.phase === 'rcp' || s.metronome) lines.push((RCP_MODES[rcpMode] ?? RCP_MODES['ad-abs']).band);
+  // La ligne RCP apparaît quand le métronome est actif (mode choisi par le stagiaire).
+  if (s.metronome) lines.push((RCP_MODES[s.rcpMode] ?? RCP_MODES['ad-abs']).band);
   if (s.phase === 'surveillance' || s.phase === 'padsStart') lines.push(TEXTS.band.surveillance);
   return lines.slice(0, 2);
 }
@@ -96,7 +96,13 @@ export function buildView({ host, s, now }) {
       spo2Signal: c.spo2,
     },
     modal,
-    band: bandLines(c, s, host.dsa.rcpMode, Boolean(modal)),
+    band: bandLines(c, s, Boolean(modal)),
+    rcpMenu: s.menuOpen
+      ? [
+          ...Object.entries(RCP_MODES).map(([key, m]) => ({ key, label: m.menu, active: s.metronome && s.rcpMode === key })),
+          { key: 'stop', label: RCP_STOP_LABEL, active: false },
+        ]
+      : null,
     leds: {
       power: true,
       rcp: s.metronome,

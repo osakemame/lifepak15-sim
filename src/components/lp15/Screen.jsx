@@ -186,7 +186,20 @@ function Modal({ modal }) {
 
 // ---------- Écran complet ----------
 
-export default function Screen({ view }) {
+function RcpMenu({ items, onPick }) {
+  return (
+    <div className="lcd-menu">
+      <div className="lcd-menu-title">RCP</div>
+      {items.map((it) => (
+        <button key={it.key} type="button" className={`lcd-menu-item${it.active ? ' active' : ''}`} onClick={() => onPick(it.key)}>
+          {it.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+export default function Screen({ view, onRcpPick }) {
   if (view.blank) return <div className="lcd lcd-blank" />;
 
   return (
@@ -211,6 +224,7 @@ export default function Screen({ view }) {
       </div>
 
       {view.modal && <Modal modal={view.modal} />}
+      {view.rcpMenu && <RcpMenu items={view.rcpMenu} onPick={onRcpPick} />}
 
       <div className="lcd-band">
         {view.band.map((line) => (

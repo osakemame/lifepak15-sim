@@ -17,7 +17,6 @@ export const defaultHostState = (mspType = null) => ({
     shocksPlanned: 1, // nombre d'analyses « choc conseillé » avant « choc non conseillé »
     forceNext: 'auto', // 'auto' | 'advised' | 'not' : résultat imposé pour la prochaine analyse
     forceId: 0, // change à chaque nouveau forçage
-    rcpMode: 'ad-abs', // mode du métronome RCP (voir lp15Texts.js)
   },
   resetId: 0, // incrémenté pour remettre l'écran du stagiaire à zéro
 });
