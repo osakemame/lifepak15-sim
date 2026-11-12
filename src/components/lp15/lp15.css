@@ -1,0 +1,702 @@
+/* Face avant du LIFEPAK 15 : rendu en CSS pur (aucune image).
+   Toutes les cotes sont en pixels sur une face de 1340 x 760, mise à l'échelle par useFitScale. */
+
+.lp-fit {
+  position: relative;
+  margin: 0 auto;
+}
+
+.lp-device {
+  --lp-font: 'Arial Narrow', 'Liberation Sans Narrow', 'Roboto Condensed', 'Helvetica Neue', Arial, sans-serif;
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1340px;
+  height: 760px;
+  transform-origin: top left;
+  background: linear-gradient(180deg, #7388a0 0%, #61768b 55%, #53677b 100%);
+  border-radius: 34px;
+  box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.2), inset 0 -8px 14px rgba(0, 0, 0, 0.35),
+    0 14px 34px rgba(0, 0, 0, 0.65);
+  font-family: var(--lp-font);
+  color: #fff;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
+  overflow: hidden;
+}
+
+/* ---------- Plaque, écran, vis ---------- */
+.lp-plate {
+  position: absolute;
+  left: 190px;
+  top: 24px;
+  width: 800px;
+  height: 54px;
+  background: linear-gradient(180deg, #3f4c5a, #323e4b);
+  border-radius: 8px 8px 0 0;
+  display: flex;
+  align-items: baseline;
+  gap: 18px;
+  padding: 8px 22px 0;
+  box-sizing: border-box;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+.lp-plate .big {
+  font-size: 40px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: #eef2f5;
+}
+.lp-plate .small {
+  font-size: 28px;
+  font-weight: 400;
+  color: #c3ccd4;
+}
+.lp-screw {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #9aa3aa, #4a525a 70%);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+.lp-bezel {
+  position: absolute;
+  left: 190px;
+  top: 78px;
+  width: 800px;
+  height: 654px;
+  background: linear-gradient(180deg, #343b43, #262c32);
+  border-radius: 0 0 14px 14px;
+  box-shadow: inset 0 0 0 3px #1c2126, inset 0 6px 14px rgba(0, 0, 0, 0.5);
+}
+
+/* ---------- Boutons physiques ---------- */
+.lp-btn {
+  position: absolute;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 22px;
+  background: linear-gradient(180deg, #55565a 0%, #26272a 48%, #101113 100%);
+  border: 1px solid #050506;
+  color: #f1f3f4;
+  font: 800 19px/1 var(--lp-font);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  box-shadow: 0 3px 0 #050505, 0 6px 9px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  text-align: center;
+}
+.lp-btn.small {
+  font-size: 16px;
+}
+.lp-btn.two-lines .lbl {
+  line-height: 1.05;
+}
+.lp-btn.active {
+  cursor: pointer;
+}
+.lp-btn.active:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #050505, 0 2px 4px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+.lp-btn .led {
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  width: 11px;
+  height: 11px;
+  margin-top: -5.5px;
+  border-radius: 50%;
+  background: #4a4e50;
+  box-shadow: inset 0 1px 2px #000;
+}
+.lp-btn .led + .lbl {
+  margin-left: 14px;
+}
+.lp-btn .led.on {
+  background: #55ff74;
+  box-shadow: 0 0 9px #55ff74, inset 0 0 2px #fff;
+}
+.lp-btn .arrow {
+  font-size: 15px;
+  color: #e9edf0;
+}
+.lp-btn.select .two {
+  font-size: 15px;
+  line-height: 1;
+  margin: 0 4px;
+}
+.lp-btn.green {
+  background: linear-gradient(180deg, #67e083 0%, #2fb552 50%, #1d8a3a 100%);
+  border-color: #0f4d20;
+  color: #e9fff0;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
+}
+.lp-btn.yellow {
+  background: linear-gradient(180deg, #ffe066 0%, #ffc61a 55%, #e0a200 100%);
+  border-color: #7a5600;
+  color: #2a1d00;
+  text-shadow: none;
+}
+.lp-btn.amber {
+  background: linear-gradient(180deg, #ffd45c 0%, #f5b300 55%, #d18f00 100%);
+  border-color: #6d4a00;
+  color: #3d2800;
+}
+.lp-btn.amber .led {
+  background: #7d5a10;
+}
+.lp-btn.analyse {
+  color: #ffb02e;
+}
+.lp-num {
+  position: absolute;
+  font: 800 38px/1 var(--lp-font);
+  color: #e6ebee;
+}
+
+/* ---------- Panneau de gauche ---------- */
+.lp-left {
+  position: absolute;
+  left: 20px;
+  top: 300px;
+  width: 150px;
+  height: 240px;
+  background: linear-gradient(180deg, #23282d, #1a1e22);
+  border-radius: 10px;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.6), 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+.lp-grille {
+  position: absolute;
+  left: 40px;
+  top: 628px;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background-color: #4b5d70;
+  background-image: radial-gradient(#1c2229 38%, transparent 42%);
+  background-size: 12px 12px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.45);
+}
+
+/* ---------- Panneau de droite ---------- */
+.lp-sticker {
+  position: absolute;
+  left: 1016px;
+  top: 8px;
+  width: 300px;
+  font: 600 12px/1.15 var(--lp-font);
+  color: #e1e8ee;
+  text-align: center;
+}
+.lp-right-frame {
+  position: absolute;
+  left: 1002px;
+  top: 40px;
+  width: 332px;
+  height: 708px;
+  background: linear-gradient(180deg, #7b8fa3, #62768a);
+  border-radius: 30px;
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.25), inset 0 -4px 8px rgba(0, 0, 0, 0.3);
+}
+.lp-right {
+  position: absolute;
+  left: 1014px;
+  top: 52px;
+  width: 312px;
+  height: 684px;
+  background: linear-gradient(180deg, #2b2f34, #1f2328);
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.6);
+}
+.lp-status-leds {
+  position: absolute;
+  left: 14px;
+  top: 8px;
+  display: flex;
+  gap: 18px;
+}
+.lp-status-leds > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+.lp-status-leds i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #4a4e50;
+}
+.lp-zone {
+  position: absolute;
+  border-radius: 16px;
+}
+.lp-zone.grey {
+  background: linear-gradient(180deg, #a8b0b6, #8c959c);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+.lp-zone.green {
+  background: linear-gradient(180deg, #5b9a85, #447d69);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+/* Bouton CHOC */
+.lp-shock-led {
+  position: absolute;
+  left: 172px;
+  top: 244px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #6d7479;
+  box-shadow: inset 0 1px 2px #000;
+}
+.lp-shock {
+  position: absolute;
+  left: 206px;
+  top: 206px;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: radial-gradient(circle at 38% 30%, #ff8a5c 0%, #ee4a1c 55%, #b82c08 100%);
+  border: 3px solid #aa2a0a;
+  box-shadow: 0 4px 0 #6d1a05, 0 8px 12px rgba(0, 0, 0, 0.5), inset 0 2px 3px rgba(255, 255, 255, 0.4);
+}
+.lp-shock:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #6d1a05, inset 0 2px 3px rgba(255, 255, 255, 0.3);
+}
+.lp-shock.ready {
+  animation: lp-shock-blink 0.7s steps(1) infinite;
+}
+@keyframes lp-shock-blink {
+  0%,
+  100% {
+    background: radial-gradient(circle at 38% 30%, #ffc27a 0%, #ff8a1f 55%, #e66a00 100%);
+    box-shadow: 0 0 22px 8px rgba(255, 150, 30, 0.9), 0 4px 0 #6d1a05, inset 0 2px 3px rgba(255, 255, 255, 0.6);
+  }
+  50% {
+    background: radial-gradient(circle at 38% 30%, #ff8a5c 0%, #ee4a1c 55%, #b82c08 100%);
+    box-shadow: 0 4px 0 #6d1a05, inset 0 2px 3px rgba(255, 255, 255, 0.4);
+  }
+}
+
+/* Écran principal, luminosité, molette */
+.lp-round {
+  position: absolute;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #6b7b88, #4a5864);
+  box-shadow: 0 3px 0 #1a2026, inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+.lp-round.home {
+  left: 24px;
+  top: 552px;
+  width: 54px;
+  height: 54px;
+}
+.lp-round.sun {
+  left: 248px;
+  top: 566px;
+  width: 42px;
+  height: 42px;
+  background: linear-gradient(180deg, #3a3d41, #17181a);
+}
+.lp-home-label {
+  position: absolute;
+  left: 16px;
+  top: 612px;
+  width: 70px;
+  text-align: center;
+  font: 700 12px/1.05 var(--lp-font);
+  color: #aab6bf;
+}
+.lp-nav-label {
+  position: absolute;
+  left: 100px;
+  top: 600px;
+  font: 800 13px/1 var(--lp-font);
+  letter-spacing: 1.5px;
+  color: #aab6bf;
+  transform: rotate(-12deg);
+}
+.lp-dial {
+  position: absolute;
+  left: 100px;
+  top: 600px;
+  width: 190px;
+  height: 190px;
+  margin-top: 28px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 40%, #3a4148 0%, #20252a 62%, #101316 100%);
+  border: 6px solid #7e90a1;
+  box-sizing: border-box;
+  box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.7);
+}
+.lp-dial .knob {
+  position: absolute;
+  left: 50%;
+  top: 22%;
+  width: 62px;
+  height: 62px;
+  margin-left: -31px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 30%, #6a7077, #23272c 70%);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+}
+
+/* ================= ÉCRAN LCD (760 x 600) ================= */
+.lcd {
+  position: absolute;
+  left: 20px;
+  top: 25px;
+  width: 760px;
+  height: 600px;
+  background: #0a0f20;
+  overflow: hidden;
+  border-radius: 4px;
+  font-family: var(--lp-font);
+  font-weight: 800;
+  box-shadow: inset 0 0 0 2px #05070d;
+}
+.lcd::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0) 38%);
+}
+.lcd-blank {
+  background: #02030a;
+}
+.lcd > * {
+  position: absolute;
+}
+.lcd-topbar {
+  left: 0;
+  top: 0;
+  width: 760px;
+  height: 28px;
+  background: #3d4a5c;
+}
+.lcd-clock {
+  left: 380px;
+  top: 3px;
+  transform: translateX(-50%);
+  font-size: 22px;
+  color: #ffd23c;
+  letter-spacing: 0.5px;
+}
+
+/* Bloc d'icônes (Bluetooth, batteries, énergie) */
+.lcd-icons {
+  right: 6px;
+  top: 3px;
+  height: 56px;
+  display: flex;
+  background: #cfd6dc;
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 1px #8d98a2;
+}
+.lcd-icons .ic {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 0 8px;
+  border-right: 1px solid #98a3ad;
+  color: #1c2127;
+  font-size: 22px;
+}
+.lcd-icons .ic:last-child {
+  border-right: 0;
+  flex-direction: column;
+  gap: 0;
+  padding: 0 10px;
+  font-size: 19px;
+  line-height: 1;
+}
+.lcd-icons .ic .num {
+  align-self: flex-start;
+  margin-top: 8px;
+}
+.lcd-ecg-label {
+  right: 10px;
+  top: 64px;
+  font-size: 19px;
+  color: #7dff2e;
+}
+
+/* Constantes */
+.hr-green {
+  color: #37e06b;
+}
+.hr-blue {
+  color: #3cc8ff;
+}
+.hr-white {
+  color: #f2f4f6;
+}
+.lcd-hr-label {
+  left: 8px;
+  top: 3px;
+  font-size: 18px;
+}
+.lcd-cross {
+  line-height: 0;
+}
+.hr-cross {
+  left: 8px;
+  top: 34px;
+}
+.lcd-hr-value {
+  left: 40px;
+  top: 28px;
+  width: 140px;
+  text-align: right;
+  font-size: 96px;
+  line-height: 1;
+}
+.lcd-bar {
+  left: 4px;
+  width: 182px;
+  height: 24px;
+  background: #3d4a5c;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 6px;
+  box-sizing: border-box;
+  font-size: 18px;
+  line-height: 24px;
+}
+.spo2-bar {
+  top: 190px;
+  color: #3cc8ff;
+}
+.pni-bar {
+  top: 420px;
+  color: #cfe4ff;
+}
+.spo2-cross {
+  left: 8px;
+  top: 218px;
+}
+.pni-cross {
+  left: 8px;
+  top: 452px;
+}
+.lcd-gauge {
+  left: 44px;
+  top: 226px;
+  width: 17px;
+  height: 66px;
+  border: 2px solid #3cc8ff;
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-end;
+}
+.lcd-gauge-fill {
+  width: 100%;
+  background: #3cc8ff;
+}
+.lcd-spo2-value {
+  left: 66px;
+  top: 214px;
+  width: 116px;
+  text-align: right;
+  font-size: 78px;
+  line-height: 1;
+  color: #3cc8ff;
+}
+.lcd-pni-sys {
+  left: 50px;
+  top: 446px;
+  width: 134px;
+  text-align: right;
+  font-size: 70px;
+  line-height: 1;
+  color: #f2f4f6;
+}
+.lcd-pni-dia {
+  left: 50px;
+  top: 500px;
+  width: 134px;
+  text-align: right;
+  font-size: 70px;
+  line-height: 1;
+  color: #f2f4f6;
+}
+.lcd-pni-map {
+  left: 14px;
+  top: 540px;
+  font-size: 24px;
+  color: #f2f4f6;
+}
+
+/* Trois barres « --- » (pas de valeur) */
+.dashes {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  height: 1em;
+  vertical-align: middle;
+}
+.dashes i {
+  display: block;
+  width: 26px;
+  height: 11px;
+  background: currentColor;
+}
+.dashes.small i {
+  width: 22px;
+  height: 9px;
+}
+.lcd-spo2-value .dashes,
+.lcd-pni-sys .dashes,
+.lcd-pni-dia .dashes {
+  height: 52px;
+}
+
+/* Tracés */
+.lcd-plot {
+  left: 190px;
+  top: 30px;
+  width: 570px;
+  height: 520px;
+  border-left: 1px solid #dfe6ee;
+  box-sizing: border-box;
+}
+.lcd-traces {
+  display: block;
+}
+.lcd-trace-label {
+  font: 800 17px var(--lp-font);
+}
+.lcd-trace-label.blue {
+  fill: #3cc8ff;
+}
+
+/* Fenêtre centrale */
+.lcd-modal {
+  left: 214px;
+  top: 168px;
+  width: 520px;
+  height: 340px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 0 0 2px #1d242c;
+}
+.lcd-modal-title {
+  position: static;
+  height: 44px;
+  line-height: 44px;
+  text-align: center;
+  background: #565d63;
+  color: #ffd23c;
+  font-size: 30px;
+}
+.lcd-modal-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  box-sizing: border-box;
+  font-weight: 700;
+}
+.lcd-modal-body.grey {
+  background: #a9afb3;
+  color: #fff;
+}
+.lcd-modal-body.white {
+  background: #f1f1f1;
+  color: #111;
+}
+.m-text {
+  font-size: 30px;
+  text-align: center;
+  line-height: 1.15;
+}
+.m-text.small {
+  font-size: 25px;
+}
+.m-text.dark {
+  color: #111;
+}
+.m-torso {
+  width: 340px;
+  height: 140px;
+  background: #fff;
+  padding: 6px;
+  box-sizing: border-box;
+}
+.m-countdown {
+  font-size: 84px;
+  line-height: 1;
+  font-weight: 800;
+}
+.m-chargerow {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-top: 6px;
+}
+.m-bar {
+  width: 330px;
+  height: 26px;
+  background: #15171a;
+  border: 2px solid #3b3f44;
+  box-sizing: border-box;
+}
+.m-bar-fill {
+  height: 100%;
+  background: linear-gradient(180deg, #ffe27a, #ffbf1f);
+}
+.m-joules {
+  min-width: 70px;
+  font-size: 24px;
+  color: #111;
+}
+.m-bolt {
+  width: 66px;
+  height: 66px;
+  border-radius: 50%;
+  background: #ff8a1f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 6px;
+}
+
+/* Bandeau d'état */
+.lcd-band {
+  left: 198px;
+  top: 552px;
+  width: 548px;
+  min-height: 44px;
+  background: #8c989f;
+  color: #ffd23c;
+  text-align: center;
+  font-size: 19px;
+  line-height: 22px;
+  padding: 0 6px;
+  box-sizing: border-box;
+}
+.lcd-band:empty {
+  display: none;
+}

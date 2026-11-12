@@ -26,6 +26,7 @@ export function useGuestSession({ pin }) {
   const [attempt, setAttempt] = useState(0);
 
   const connRef = useRef(null);
+  const lastStatusRef = useRef(null); // dernier état d'écran, renvoyé après une reconnexion
 
   useEffect(() => {
     let cancelled = false;
@@ -59,6 +60,7 @@ export function useGuestSession({ pin }) {
         setStatus('connected');
         setError(null);
         conn.send(makeMessage(MSG.HELLO, { role: 'trainee' }));
+        if (lastStatusRef.current) conn.send(makeMessage(MSG.STATUS, lastStatusRef.current));
 
         const lost = () => {
           if (cancelled || connRef.current !== conn) return;
@@ -108,9 +110,23 @@ export function useGuestSession({ pin }) {
   }, []);
 
   const ping = useCallback(() => send(MSG.PING, { sentAt: Date.now() }), [send]);
-  // Action du stagiaire (étape 1 : essai ; plus tard NIBP, CPR, ANALYZE, CHOC...)
-  const sendAction = useCallback((action, detail) => send(MSG.ACTION, { action, detail }), [send]);
+
+  // Une ligne du journal du formateur : action du stagiaire ('stagiaire') ou événement de l'appareil ('appareil')
+  const sendAction = useCallback(
+    (action, detail, source = 'stagiaire') => send(MSG.ACTION, { action, detail, source }),
+    [send]
+  );
+
+  // État courant de l'écran (phase, analyses, chocs...) : affiché sur la page du formateur
+  const sendStatus = useCallback(
+    (payload) => {
+      lastStatusRef.current = payload;
+      send(MSG.STATUS, payload);
+    },
+    [send]
+  );
+
   const retry = useCallback(() => setAttempt((a) => a + 1), []);
 
-  return { status, error, latency, hostState, lastTest, ping, sendAction, retry };
+  return { status, error, latency, hostState, lastTest, ping, sendAction, sendStatus, retry };
 }

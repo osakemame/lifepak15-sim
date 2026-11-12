@@ -5,24 +5,62 @@ import { saveSession } from '../services/session.js';
 import { mspLabel } from '../scenarios/mspTypes.js';
 import StatusBadge from '../components/StatusBadge.jsx';
 import Diagnostic from '../components/Diagnostic.jsx';
+import TrainerPanel from '../components/TrainerPanel.jsx';
 
-// Écran FORMATEUR (portrait). Étape 1 : création de session, code PIN, état de la liaison,
-// message d'essai et journal horodaté des actions du stagiaire. La télécommande
-// (constantes, rythmes, rampes) sera ajoutée à l'étape 4.
+const card = 'rounded-xl bg-anthracite-800 border border-anthracite-600 p-4';
+
+// Libellés de la phase de l'écran du stagiaire (pour la page formateur)
+const PHASES = {
+  surveillance: 'Surveillance',
+  padsStart: 'Mise en route dériv palettes',
+  padsWait: 'Attend les électrodes',
+  awaitAnalyse: 'Attend un appui sur ANALYSE',
+  analysing: 'Analyse en cours',
+  shockAdvised: 'Choc conseillé',
+  notAdvised: 'Choc non conseillé',
+  charging: 'Charge en cours',
+  ready: 'Chargé : attend le bouton CHOC',
+  blank: 'Choc en cours',
+  delivered: 'Énergie délivrée',
+  rcp: 'RCP (compte à rebours)',
+};
+
+const SOURCES = { stagiaire: 'Stagiaire', appareil: 'Appareil', formateur: 'Formateur' };
+const sourceColor = {
+  stagiaire: 'text-spo2',
+  appareil: 'text-gray-400',
+  formateur: 'text-choc',
+};
+
+// Écran FORMATEUR (portrait). Étape 2 : code de session, état de l'écran du stagiaire,
+// panneau de test provisoire et journal horodaté. La télécommande complète arrive à l'étape 4.
 export default function TrainerPage({ pin: savedPin, resume, mspType, onQuit }) {
-  const { pin, status, error, latency, journal, ping, sendTest, retry } = useHostSession({
-    pin: savedPin,
-    resume,
-    mspType,
-  });
+  const {
+    pin,
+    status,
+    error,
+    latency,
+    host,
+    setHost,
+    journal,
+    clearJournal,
+    logLocal,
+    traineeStatus,
+    ping,
+    sendTest,
+    retry,
+    eraseSavedData,
+  } = useHostSession({ pin: savedPin, resume, mspType });
+
   const [copied, setCopied] = useState(false);
+  const [confirm, setConfirm] = useState(null); // 'end' | 'clear' | null
 
   useWakeLock(true);
 
   // Mémorise la session pour la reprise automatique après rafraîchissement
   useEffect(() => {
-    if (pin) saveSession({ role: 'trainer', pin, mspType });
-  }, [pin, mspType]);
+    if (pin) saveSession({ role: 'trainer', pin, mspType: host.mspType });
+  }, [pin, host.mspType]);
 
   const link = pin ? `${window.location.origin}${window.location.pathname}?pin=${pin}` : '';
 
@@ -37,6 +75,17 @@ export default function TrainerPage({ pin: savedPin, resume, mspType, onQuit }) 
   };
 
   const time = (ts) => new Date(ts).toLocaleTimeString('fr-FR');
+  const waitingForPads = traineeStatus?.phase === 'padsWait' && !host.connections.padsAttached;
+
+  const validatePads = () => {
+    setHost((h) => ({ ...h, connections: { ...h.connections, padsAttached: true } }));
+    logLocal('Électrodes', 'Pose des électrodes validée par le formateur');
+  };
+
+  const endSession = () => {
+    eraseSavedData();
+    onQuit();
+  };
 
   return (
     <div className="min-h-full flex flex-col gap-4 p-4 max-w-md mx-auto">
@@ -49,21 +98,36 @@ export default function TrainerPage({ pin: savedPin, resume, mspType, onQuit }) 
         <Diagnostic error={error} onRetry={retry} onQuit={onQuit} />
       ) : (
         <>
-          <section className="rounded-xl bg-anthracite-800 border border-anthracite-600 p-4 text-center">
+          <section className={`${card} text-center`}>
             <p className="text-sm text-gray-400">Code de session</p>
             <p className="font-mono text-6xl tracking-[0.3em] text-fc py-2">{pin ?? '····'}</p>
-            <p className="text-sm text-gray-400">MSP : {mspLabel(mspType)}</p>
+            <p className="text-sm text-gray-400">MSP : {mspLabel(host.mspType)}</p>
             <button className="btn mt-3" onClick={copyLink} disabled={!pin}>
               {copied ? 'Lien copié ✓' : 'Copier le lien stagiaire'}
             </button>
           </section>
 
-          {error && status !== 'error' && (
-            <p className="text-xs text-yellow-300">Avertissement réseau : {error.type}</p>
-          )}
+          {error && <p className="text-xs text-yellow-300">Avertissement réseau : {error.type}</p>}
 
-          <section className="rounded-xl bg-anthracite-800 border border-anthracite-600 p-4 space-y-3">
-            <h2 className="font-semibold">Test de liaison</h2>
+          <section className={`${card} space-y-2`}>
+            <h2 className="font-semibold">Écran du stagiaire</h2>
+            {traineeStatus ? (
+              <>
+                <p className="text-lg text-choc">{PHASES[traineeStatus.phase] ?? traineeStatus.phase}</p>
+                <p className="text-sm text-gray-400">
+                  Analyses : {traineeStatus.analyses} · Chocs délivrés : {traineeStatus.shocksDelivered} ·
+                  Métronome : {traineeStatus.metronome ? 'actif' : 'arrêté'}
+                  {traineeStatus.pni === 'measuring' ? ' · PNI en cours' : ''}
+                </p>
+              </>
+            ) : (
+              <p className="text-sm text-gray-500">Aucun stagiaire connecté pour le moment.</p>
+            )}
+            {waitingForPads && (
+              <button className="btn btn-primary w-full" onClick={validatePads}>
+                Valider : électrodes posées
+              </button>
+            )}
             <div className="flex gap-3">
               <button className="btn flex-1" onClick={ping} disabled={status !== 'connected'}>
                 Mesurer la latence
@@ -78,15 +142,28 @@ export default function TrainerPage({ pin: savedPin, resume, mspType, onQuit }) 
             </div>
           </section>
 
-          <section className="rounded-xl bg-anthracite-800 border border-anthracite-600 p-4">
-            <h2 className="font-semibold mb-2">Journal des actions</h2>
+          <TrainerPanel host={host} setHost={setHost} />
+
+          <section className={card}>
+            <div className="mb-2 flex items-center justify-between">
+              <h2 className="font-semibold">Journal des actions</h2>
+              {journal.length > 0 && (
+                <button className="text-sm text-gray-400 underline" onClick={() => setConfirm('clear')}>
+                  Effacer
+                </button>
+              )}
+            </div>
             {journal.length === 0 ? (
               <p className="text-sm text-gray-500">Aucune action pour le moment.</p>
             ) : (
               <ul className="space-y-1 text-sm font-mono">
                 {journal.map((entry, i) => (
                   <li key={`${entry.ts}-${i}`}>
-                    <span className="text-gray-400">{time(entry.ts)}</span> {entry.action}
+                    <span className="text-gray-400">{time(entry.ts)}</span>{' '}
+                    <span className={sourceColor[entry.source] ?? 'text-gray-400'}>
+                      [{SOURCES[entry.source] ?? entry.source}]
+                    </span>{' '}
+                    {entry.action}
                     {entry.detail ? ` — ${entry.detail}` : ''}
                   </li>
                 ))}
@@ -96,9 +173,41 @@ export default function TrainerPage({ pin: savedPin, resume, mspType, onQuit }) 
         </>
       )}
 
-      <button className="btn" onClick={onQuit}>
+      <button className="btn" onClick={() => setConfirm('end')}>
         Terminer la session
       </button>
+
+      {confirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6">
+          <div className="w-full max-w-sm space-y-4 rounded-xl border border-anthracite-600 bg-anthracite-800 p-5">
+            <h2 className="text-lg font-bold">
+              {confirm === 'end' ? 'Terminer la session ?' : 'Effacer le journal ?'}
+            </h2>
+            <p className="text-sm text-gray-300">
+              {confirm === 'end'
+                ? 'Le journal des actions de cette session sera effacé. Assurez-vous d\'avoir terminé le débriefing.'
+                : 'Toutes les lignes du journal seront supprimées.'}
+            </p>
+            <div className="flex gap-3">
+              <button className="btn flex-1" onClick={() => setConfirm(null)}>
+                Annuler
+              </button>
+              <button
+                className="btn btn-primary flex-1"
+                onClick={() => {
+                  if (confirm === 'end') endSession();
+                  else {
+                    clearJournal();
+                    setConfirm(null);
+                  }
+                }}
+              >
+                {confirm === 'end' ? 'Terminer' : 'Effacer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -8,11 +8,12 @@ export const MSG = {
   PONG: 'PONG',
 
   // Formateur -> stagiaire
-  STATE: 'STATE', // instantané complet de l'état de la session
-  TEST: 'TEST', // message d'essai (étape 1)
+  STATE: 'STATE', // état de la session : branchements, constantes, scénario DSA (engine/hostState.js)
+  TEST: 'TEST', // message d'essai
 
   // Stagiaire -> formateur
-  ACTION: 'ACTION', // action du stagiaire, alimente le journal (ex. NIBP, CPR, ANALYZE...)
+  ACTION: 'ACTION', // { action, detail, source } : une ligne du journal (stagiaire ou appareil)
+  STATUS: 'STATUS', // état courant de l'écran du stagiaire (phase, analyses, chocs...)
 };
 
 export const makeMessage = (type, payload = {}) => ({ type, payload, ts: Date.now() });
