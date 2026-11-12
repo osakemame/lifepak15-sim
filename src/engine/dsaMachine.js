@@ -18,6 +18,7 @@ export const initialState = () => ({
   analyses: 0, // nombre d'analyses lancées
   shocksDelivered: 0,
   metronome: false,
+  rcpLed: false, // LED du bouton RCP : allumée dès le 1er appui sur RCP, jusqu'à l'extinction de l'appareil
   rcpMode: 'ad-abs', // dernier mode de métronome choisi par le stagiaire
   menuOpen: false, // menu du bouton RCP affiché
   charge: 0, // joules affichés pendant la charge
@@ -57,9 +58,18 @@ const startAnalysis = (s) => ({
 const ANALYSE_BLOCKED = ['padsStart', 'padsWait', 'analysing', 'blank'];
 
 export function reducer(s, a) {
+  // Appareil éteint : seul MARCHE (ou la remise à zéro du formateur) réagit
+  if (s.phase === 'off' && a.type !== 'POWER_ON' && a.type !== 'RESET') return s;
   switch (a.type) {
     case 'RESET':
       return initialState();
+
+    // MARCHE : l'extinction efface tous les réglages ; le rallumage repart comme au début de la session
+    case 'POWER_OFF':
+      return { ...initialState(), phase: 'off', consumedForceId: s.consumedForceId };
+
+    case 'POWER_ON':
+      return s.phase === 'off' ? { ...initialState(), consumedForceId: s.consumedForceId } : s;
 
     case 'ANALYSE_PRESS':
       if (ANALYSE_BLOCKED.includes(s.phase)) return s;
@@ -112,14 +122,14 @@ export function reducer(s, a) {
 
     case 'RCP_MENU':
       if (s.phase === 'analysing' || s.phase === 'blank') return s;
-      return { ...s, menuOpen: !s.menuOpen };
+      return { ...s, menuOpen: !s.menuOpen, rcpLed: true };
 
     case 'RCP_CHOOSE':
       // a.mode : clé de RCP_MODES, ou 'stop' (« Arrêter métronome »)
       if (s.phase === 'analysing' || s.phase === 'blank') return s;
       return a.mode === 'stop'
-        ? { ...s, metronome: false, menuOpen: false }
-        : { ...s, metronome: true, rcpMode: a.mode, menuOpen: false };
+        ? { ...s, metronome: false, menuOpen: false, rcpLed: true }
+        : { ...s, metronome: true, rcpMode: a.mode, menuOpen: false, rcpLed: true };
 
     case 'PNI_START':
       return s.pni.status === 'measuring' ? s : { ...s, pni: { ...s.pni, status: 'measuring', cuff: 20 } };

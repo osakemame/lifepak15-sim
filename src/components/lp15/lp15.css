@@ -706,35 +706,38 @@
   display: none;
 }
 
-/* Menu du bouton RCP (5 choix de métronome) */
+/* Menu du bouton RCP : « Métronome RCP », 5 choix (d'après la photo de l'appareil) */
 .lcd-menu {
-  left: 214px;
-  top: 120px;
-  width: 400px;
+  left: 10px;
+  top: 30px;
+  width: 740px;
+  height: 516px;
   display: flex;
   flex-direction: column;
-  background: #565d63;
+  background: #cfd3d6;
   box-shadow: 0 0 0 2px #1d242c;
   z-index: 5;
 }
 .lcd-menu-title {
   position: static;
-  height: 40px;
-  line-height: 40px;
+  height: 52px;
+  line-height: 52px;
   text-align: center;
+  background: #565d63;
   color: #ffd23c;
-  font-size: 28px;
+  font-size: 32px;
+  font-weight: 800;
 }
 .lcd-menu-item {
   height: 62px;
-  border: 0;
-  border-top: 2px solid #1d242c;
-  background: #a9afb3;
-  color: #fff;
+  margin: 8px 12px 0;
+  border: 2px solid #1d242c;
+  background: #f6f6f6;
+  color: #111;
   font: inherit;
-  font-size: 28px;
-  text-align: left;
-  padding: 0 20px;
+  font-size: 30px;
+  font-weight: 700;
+  text-align: center;
   cursor: pointer;
 }
-.lcd-menu-item.active { background: #2f6fd0; }
+.lcd-menu-item.active { color: #666; }

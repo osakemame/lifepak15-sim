@@ -159,7 +159,7 @@ export function useDsa({ host, log, report }) {
 
   // --- Les 4 boutons actifs du stagiaire : RCP, ANALYSE, CHOC, PNI ---
   const analyse = useCallback(() => {
-    if (['padsStart', 'padsWait', 'analysing', 'blank'].includes(s.phase)) return;
+    if (['off', 'padsStart', 'padsWait', 'analysing', 'blank'].includes(s.phase)) return;
     logRef.current?.('ANALYSE', 'Appui sur ANALYSE');
     dispatch({
       type: 'ANALYSE_PRESS',
@@ -178,6 +178,12 @@ export function useDsa({ host, log, report }) {
     dispatch({ type: 'RCP_MENU' });
   }, []);
 
+  // MARCHE : éteint ou rallume l'appareil
+  const power = useCallback(() => {
+    logRef.current?.('MARCHE', s.phase === 'off' ? 'Appareil rallumé' : 'Appareil éteint (réglages effacés)');
+    dispatch({ type: s.phase === 'off' ? 'POWER_ON' : 'POWER_OFF' });
+  }, [s.phase]);
+
   const rcpChoose = useCallback((mode) => {
     logRef.current?.(
       'RCP',
@@ -187,14 +193,14 @@ export function useDsa({ host, log, report }) {
   }, []);
 
   const pni = useCallback(() => {
-    if (s.pni.status === 'measuring') return;
+    if (s.phase === 'off' || s.pni.status === 'measuring') return;
     if (!hostRef.current.connections.cuff) {
       logRef.current?.('PNI', 'Appui sur PNI sans brassard branché');
       return;
     }
     logRef.current?.('PNI', 'Lancement de la mesure');
     dispatch({ type: 'PNI_START' });
-  }, [s.pni.status]);
+  }, [s.pni.status, s.phase]);
 
   // Fin de mesure PNI : résultat dans le journal
   const lastPni = useRef('idle');
@@ -205,5 +211,5 @@ export function useDsa({ host, log, report }) {
     lastPni.current = s.pni.status;
   }, [s.pni.status, s.pni.sys, s.pni.dia, s.pni.map]);
 
-  return { s, actions: { analyse, shock, rcp, pni, rcpChoose } };
+  return { s, actions: { analyse, shock, rcp, pni, rcpChoose, power } };
 }

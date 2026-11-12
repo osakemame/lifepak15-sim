@@ -23,6 +23,7 @@ const PHASES = {
   blank: 'Choc en cours',
   delivered: 'Énergie délivrée',
   rcp: 'RCP (compte à rebours)',
+  off: 'Appareil éteint',
 };
 
 const SOURCES = { stagiaire: 'Stagiaire', appareil: 'Appareil', formateur: 'Formateur' };

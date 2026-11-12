@@ -1,4 +1,5 @@
 import React from 'react';
+import { RHYTHMS } from '../engine/rhythms.js';
 
 // Panneau de commande PROVISOIRE du formateur (étape 2) : juste ce qu'il faut pour tester
 // l'écran du stagiaire. La vraie télécommande (rampes de constantes, rythmes, événements)
@@ -71,6 +72,20 @@ export default function TrainerPanel({ host, setHost }) {
         <Toggle label="Capteur SpO2 (FP SpO2 en bleu)" value={c.spo2} onChange={(x) => setConn('spo2', x)} />
         <Toggle label="Brassard PNI" value={c.cuff} onChange={(x) => setConn('cuff', x)} />
         <Toggle label="Électrodes posées (validation)" value={c.padsAttached} onChange={(x) => setConn('padsAttached', x)} />
+      </section>
+
+      <section className={card}>
+        <h2 className="font-semibold">Rythme (tracé ECG)</h2>
+        <select
+          value={host.rhythm}
+          onChange={(e) => setHost((h) => ({ ...h, rhythm: e.target.value }))}
+          className="w-full rounded-lg bg-anthracite-700 border border-anthracite-600 p-3"
+        >
+          {Object.entries(RHYTHMS).map(([key, r]) => (
+            <option key={key} value={key}>{r.label}</option>
+          ))}
+        </select>
+        <p className="text-xs text-gray-500">Provisoire : les rythmes avec leurs constantes arrivent à l'étape 4.</p>
       </section>
 
       <section className={card}>

@@ -1,8 +1,10 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useGuestSession } from '../hooks/useGuestSession.js';
 import { useWakeLock } from '../hooks/useWakeLock.js';
 import { useNow } from '../hooks/useNow.js';
 import { useDsa } from '../hooks/useDsa.js';
+import { useDsaAudio } from '../hooks/useDsaAudio.js';
+import { audioState, onAudioState, setMuted, unlockAudio } from '../services/audio.js';
 import { saveSession } from '../services/session.js';
 import { normalizeHostState } from '../engine/hostState.js';
 import { buildView } from '../engine/viewModel.js';
@@ -35,7 +37,29 @@ export default function TraineePage({ pin, onQuit }) {
 
   const host = useMemo(() => normalizeHostState(hostState), [hostState]);
   const { s, actions } = useDsa({ host, log: sendAction, report: sendStatus });
+  const { onBeat } = useDsaAudio({ s, host });
   const nowMs = useNow(250);
+
+  // Son : les navigateurs exigent un geste de l'utilisateur avant de jouer (le 1er toucher l'active)
+  const [audioReady, setAudioReady] = useState(audioState() === 'running');
+  const [mute, setMute] = useState(false);
+  useEffect(() => {
+    const unlock = () => unlockAudio();
+    window.addEventListener('pointerdown', unlock);
+    window.addEventListener('keydown', unlock);
+    const off = onAudioState((st) => setAudioReady(st === 'running'));
+    const poll = setInterval(() => setAudioReady(audioState() === 'running'), 500);
+    return () => {
+      window.removeEventListener('pointerdown', unlock);
+      window.removeEventListener('keydown', unlock);
+      off();
+      clearInterval(poll);
+    };
+  }, []);
+  const toggleMute = () => {
+    setMuted(!mute);
+    setMute(!mute);
+  };
   const view = buildView({ host, s, now: new Date(nowMs) });
 
   const quit = () => {
@@ -60,6 +84,10 @@ export default function TraineePage({ pin, onQuit }) {
         >
           <span className="font-semibold">Session {pin}</span>
           <div className="flex items-center gap-2">
+            {!audioReady && !mute && <span className="text-yellow-300">Touchez l'écran pour activer le son</span>}
+            <button className="px-2 py-1 rounded bg-anthracite-700" onClick={toggleMute}>
+              {mute ? 'Son coupé' : 'Son activé'}
+            </button>
             <StatusBadge status={status} latency={latency} />
             <button className="px-2 py-1 rounded bg-anthracite-700" onClick={toggleFullscreen}>
               Plein écran
@@ -76,7 +104,7 @@ export default function TraineePage({ pin, onQuit }) {
           </div>
         ) : (
           <div className="flex-1 min-h-0 flex items-center justify-center overflow-hidden">
-            <Device view={view} actions={actions} reserveTop={TOP_BAR} />
+            <Device view={view} actions={{ ...actions, onBeat }} reserveTop={TOP_BAR} />
           </div>
         )}
       </div>

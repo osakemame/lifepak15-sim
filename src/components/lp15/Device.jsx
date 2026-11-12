@@ -59,7 +59,7 @@ export default function Device({ view, actions, reserveTop = 0 }) {
 
         {/* Écran */}
         <div className="lp-bezel">
-          <Screen view={view} onRcpPick={actions.rcpChoose} />
+          <Screen view={view} onRcpPick={actions.rcpChoose} onBeat={actions.onBeat} />
         </div>
         <i className="lp-screw" style={{ left: 200, top: 712 }} />
         <i className="lp-screw" style={{ left: 968, top: 712 }} />
@@ -88,7 +88,7 @@ export default function Device({ view, actions, reserveTop = 0 }) {
             <div><i /><WrenchIcon /></div>
           </div>
           <Num n="1" x={139} y={22} />
-          <Btn label="MARCHE" className="green" led ledOn={view.leds.power} style={{ left: 176, top: 14, width: 124, height: 46 }} />
+          <Btn label="MARCHE" className="green" led ledOn={view.leds.power} onPress={actions.power} style={{ left: 176, top: 14, width: 124, height: 46 }} />
 
           <Btn label="RCP" led ledOn={view.leds.rcp} onPress={actions.rcp} style={{ left: 14, top: 96, width: 120, height: 42 }} />
           <Num n="2" x={139} y={94} />

@@ -84,6 +84,7 @@ export function buildView({ host, s, now }) {
 
   return {
     clock: formatClock(now),
+    off: s.phase === 'off', // appareil éteint : écran noir
     blank: s.phase === 'blank', // écran noir au moment du choc
     heart: heartBlock(c, v, s),
     spo2: { value: c.spo2 ? v.spo2 : null, connected: c.spo2 },
@@ -92,6 +93,9 @@ export function buildView({ host, s, now }) {
       // Étape 2 : tracés statiques. L'animation (balayage, rythmes) arrive à l'étape 3.
       ecgLabel: s.padsLead ? 'Palettes x1.0' : 'II x1.0',
       // pointillés = rien de branché ; ligne continue = palettes actives sans signal ; tracé = signal
+      rhythm: host.rhythm,
+      hr: v.hr,
+      spo2: v.spo2,
       ecgMode: c.ecgLeads || c.padsAttached ? 'signal' : s.padsLead ? 'flat' : 'dashed',
       spo2Signal: c.spo2,
     },
@@ -104,8 +108,8 @@ export function buildView({ host, s, now }) {
         ]
       : null,
     leds: {
-      power: true,
-      rcp: s.metronome,
+      power: s.phase !== 'off',
+      rcp: s.rcpLed,
       analyse: s.phase === 'analysing',
       pni: s.pni.status === 'measuring',
     },

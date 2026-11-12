@@ -14,5 +14,6 @@ export const TIMINGS = {
   blank: 900, // écran noir au moment du choc (vidéo)
   delivered: 3500, // PROVISOIRE : affichage de « Energie délivrée »
   pni: 10000, // indiqué par l'utilisateur
+  ventilationPause: 5000, // PROVISOIRE : silence du métronome pour les 2 insufflations (modes « Abs. voies aér. » 30:2 et 15:2)
   rcpSeconds: 120, // compte à rebours RCP : 2:00
 };
