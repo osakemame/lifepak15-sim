@@ -268,7 +268,7 @@ export default function TrainerPanel({ host, setHost, logLocal }) {
       <section className={card}>
         <h2 className="font-semibold">Scénario DSA</h2>
         <Stepper
-          label="Chocs conseillés à la suite"
+          label="Chocs conseillés à la suite (si FV ou TV)"
           value={host.dsa.shocksPlanned}
           min={0}
           max={9}

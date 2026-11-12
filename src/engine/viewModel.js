@@ -1,6 +1,7 @@
 // Traduit (état du formateur + état de la machine DSA + heure) en « ce qu'affiche l'écran ».
 // Fonction pure : l'écran (components/lp15/Screen.jsx) ne contient aucune logique métier.
 
+import { RHYTHMS } from './rhythms.js';
 import { RCP_MODES, RCP_STOP_LABEL, SHOCK_JOULES, TEXTS } from './lp15Texts.js';
 
 const pad2 = (n) => String(n).padStart(2, '0');
@@ -21,6 +22,7 @@ function heartBlock(c, v, s) {
 function pniBlock(s) {
   if (s.pni.status === 'measuring') return { mode: 'measuring', cuff: s.pni.cuff };
   if (s.pni.status === 'done') {
+    if (!(s.pni.sys > 0)) return { mode: 'none' }; // non mesurable (ACR, choc majeur) : tirets
     return { mode: 'done', sys: s.pni.sys, dia: s.pni.dia, map: s.pni.map };
   }
   return { mode: 'none' };
@@ -88,7 +90,8 @@ export function buildView({ host, s, now }) {
     off: s.phase === 'off', // appareil éteint : écran noir
     blank: s.phase === 'blank', // écran noir au moment du choc
     heart: heartBlock(c, v, s),
-    spo2: { value: c.spo2 ? v.spo2 : null, connected: c.spo2 },
+    // Sans pouls (FV, asystolie, AESP) : la SpO2 s'affiche en tirets
+    spo2: { value: c.spo2 && RHYTHMS[host.rhythm]?.pulse !== false && v.spo2 > 0 ? v.spo2 : null, connected: c.spo2 },
     pni: pniBlock(s),
     traces: {
       // Étape 2 : tracés statiques. L'animation (balayage, rythmes) arrive à l'étape 3.

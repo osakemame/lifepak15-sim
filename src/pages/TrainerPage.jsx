@@ -2,12 +2,20 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useHostSession } from '../hooks/useHostSession.js';
 import { useWakeLock } from '../hooks/useWakeLock.js';
 import { saveSession } from '../services/session.js';
-import { mspLabel } from '../scenarios/mspTypes.js';
 import StatusBadge from '../components/StatusBadge.jsx';
 import Diagnostic from '../components/Diagnostic.jsx';
 import TrainerPanel from '../components/TrainerPanel.jsx';
 import { advance, applyRhythm } from '../engine/ramps.js';
 import { RHYTHMS } from '../engine/rhythms.js';
+import { loadScenario, pauseScenario, resumeScenario, startScenario, stopScenario } from '../engine/runner.js';
+import { scenarioTitle } from '../scenarios/scenarioModel.js';
+import { deleteScenarioOnServer, saveScenarioOnServer } from '../services/scenarioApi.js';
+import { useScenarios } from '../hooks/useScenarios.js';
+import { useAuthToken } from '../hooks/useAuthToken.jsx';
+import ScenarioCard from '../components/ScenarioCard.jsx';
+import ScenarioLibrary from '../components/ScenarioLibrary.jsx';
+import Debrief from '../components/Debrief.jsx';
+import Footer from '../components/Footer.jsx';
 
 const card = 'rounded-xl bg-anthracite-800 border border-anthracite-600 p-4';
 
@@ -49,13 +57,14 @@ export default function TrainerPage({ pin: savedPin, resume, mspType, onQuit }) 
     clearJournal,
     logLocal,
     traineeStatus,
-    ping,
-    sendTest,
     retry,
     eraseSavedData,
   } = useHostSession({ pin: savedPin, resume, mspType });
 
   const [copied, setCopied] = useState(false);
+  const [libraryOpen, setLibraryOpen] = useState(false);
+  const { list, status: scStatus, refresh } = useScenarios();
+  const { withToken, codeModal } = useAuthToken();
   const [confirm, setConfirm] = useState(null); // 'end' | 'clear' | null
 
   useWakeLock(true);
@@ -110,6 +119,35 @@ export default function TrainerPage({ pin: savedPin, resume, mspType, onQuit }) 
     logLocal('Électrodes', 'Pose des électrodes validée par le formateur');
   };
 
+  // --- Scénarios ---
+  const loadSc = (sc, { temp }) => {
+    setHost((h) => loadScenario(h, sc, { temp }));
+    logLocal('Scénario', `Chargé : ${scenarioTitle(sc)}${temp ? ' (MSP temporaire)' : ''}`);
+    setLibraryOpen(false);
+  };
+  const saveSc = async (sc) => {
+    await withToken((token) => saveScenarioOnServer(token, sc));
+    await refresh();
+    logLocal('Scénario', `Enregistré : ${scenarioTitle(sc)}`);
+  };
+  const deleteSc = async (sc) => {
+    await withToken((token) => deleteScenarioOnServer(token, sc.id));
+    await refresh();
+    logLocal('Scénario', `Supprimé : ${scenarioTitle(sc)}`);
+  };
+  const saveTemp = async () => {
+    try {
+      await saveSc(host.scenario.snapshot);
+      setHost((h) => ({ ...h, scenario: { ...h.scenario, temp: false } }));
+    } catch (e) {
+      if (!e.cancelled) window.alert(e.message || 'Enregistrement impossible');
+    }
+  };
+  const runSc = (fn, text) => {
+    setHost((h) => fn(h, Date.now()));
+    logLocal('Scénario', `${text} : ${scenarioTitle(host.scenario.snapshot)}`);
+  };
+
   const endSession = () => {
     eraseSavedData();
     onQuit();
@@ -129,7 +167,7 @@ export default function TrainerPage({ pin: savedPin, resume, mspType, onQuit }) 
           <section className={`${card} text-center`}>
             <p className="text-sm text-gray-400">Code de session</p>
             <p className="font-mono text-6xl tracking-[0.3em] text-fc py-2">{pin ?? '····'}</p>
-            <p className="text-sm text-gray-400">MSP : {mspLabel(host.mspType)}</p>
+            <p className="text-sm text-gray-400">MSP : {host.scenario ? scenarioTitle(host.scenario.snapshot) : 'aucune (réglage manuel)'}</p>
             <button className="btn mt-3" onClick={copyLink} disabled={!pin}>
               {copied ? 'Lien copié ✓' : 'Copier le lien stagiaire'}
             </button>
@@ -156,21 +194,22 @@ export default function TrainerPage({ pin: savedPin, resume, mspType, onQuit }) 
                 Valider : électrodes posées
               </button>
             )}
-            <div className="flex gap-3">
-              <button className="btn flex-1" onClick={ping} disabled={status !== 'connected'}>
-                Mesurer la latence
-              </button>
-              <button
-                className="btn flex-1"
-                onClick={() => sendTest(`Message d'essai à ${time(Date.now())}`)}
-                disabled={status !== 'connected'}
-              >
-                Envoyer un essai
-              </button>
-            </div>
           </section>
 
+          <ScenarioCard
+            host={host}
+            onOpenLibrary={() => setLibraryOpen(true)}
+            onStart={() => runSc(startScenario, 'Démarré')}
+            onPause={() => runSc(pauseScenario, 'Pause')}
+            onResume={() => runSc(resumeScenario, 'Reprise')}
+            onStop={() => runSc((h) => stopScenario(h), 'Arrêté')}
+            onReload={() => loadSc(host.scenario.snapshot, { temp: host.scenario.temp })}
+            onSaveTemp={saveTemp}
+          />
+
           <TrainerPanel host={host} setHost={setHost} logLocal={logLocal} />
+
+          <Debrief journal={journal} />
 
           <section className={card}>
             <div className="mb-2 flex items-center justify-between">
@@ -204,6 +243,20 @@ export default function TrainerPage({ pin: savedPin, resume, mspType, onQuit }) 
       <button className="btn" onClick={() => setConfirm('end')}>
         Terminer la session
       </button>
+
+      <Footer />
+      {codeModal}
+      {libraryOpen && (
+        <ScenarioLibrary
+          list={list}
+          status={scStatus}
+          current={host.scenario?.id}
+          onClose={() => setLibraryOpen(false)}
+          onLoad={loadSc}
+          onSave={saveSc}
+          onDelete={deleteSc}
+        />
+      )}
 
       {confirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6">

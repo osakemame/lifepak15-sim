@@ -13,6 +13,7 @@ export const defaultHostState = (mspType = null) => ({
   // Constantes du patient. Valeurs de départ modifiables ; PA normale adulte = 120/80 (choix utilisateur).
   vitals: { hr: 75, spo2: 98, sys: 120, dia: 80 },
   rhythm: 'sinus', // rythme affiché sur le tracé ECG (voir engine/rhythms.js)
+  scenario: null, // scénario chargé { id, name, variant, status, startedAt, pausedAt, temp, snapshot } (engine/runner.js)
   ramps: [], // évolutions progressives en cours (engine/ramps.js)
   scheduled: [], // changements de rythme programmés
   // Scénario DSA

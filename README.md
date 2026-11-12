@@ -3,7 +3,7 @@
 Application web de simulation d'un moniteur-défibrillateur LIFEPAK 15 en **mode DSA** (semi-automatique) pour la formation secourisme.
 Deux écrans reliés en temps réel : **Stagiaire** (face avant du LIFEPAK 15, paysage) et **Formateur** (télécommande, portrait).
 
-**État : étape 4 sur 5** — écran du stagiaire (DSA, tracés, sons, voix) et télécommande du formateur complète.
+**État : étape 5 sur 5 (version complète)** — écran du stagiaire, télécommande du formateur, scénarios partagés et débriefing.
 
 ## Feuille de route
 
@@ -13,7 +13,28 @@ Deux écrans reliés en temps réel : **Stagiaire** (face avant du LIFEPAK 15, p
 | 2 | Écran Stagiaire (face avant, séquence DSA, PNI), panneau de test formateur, journal | **fait** |
 | 3 | Tracés animés (ECG, pléthysmographie SpO2) et sons / voix | **fait** |
 | 4 | Télécommande Formateur complète (rampes de constantes, rythmes, remarques) | **fait** |
-| 5 | Scénarios (MSP), enregistrement sur Netlify, débriefing | à venir |
+| 5 | Scénarios (MSP), enregistrement sur Netlify, débriefing, copyright | **fait** |
+
+## Ajouts de l'étape 5 : scénarios, stockage partagé, débriefing
+
+- **32 scénarios de départ** (vos 15 situations en variantes « Stable » et « Évolutif », la n°5 en 4 variantes) : `src/scenarios/starters.js`. Tous sont modifiables et supprimables.
+- **Bibliothèque** (page formateur > « Choisir un scénario ») : fiche (consigne, départ, chronologie), **Charger**, **Modifier**, **Dupliquer**, **Supprimer**, **+ Nouvelle MSP**.
+- **Déroulement** : « Charger » applique les valeurs de départ et remet l'écran du stagiaire à zéro ; **Démarrer** lance la chronologie (évolutions des constantes, changements de rythme, valeurs imposées) avec un chronomètre ; **Pause / Reprendre** (toute la chronologie est décalée) ; **Arrêter**.
+- **MSP temporaire** : créée dans l'éditeur avec « Utiliser sans enregistrer » ; le bouton « Enregistrer cette MSP » reste sur la page tant qu'elle n'est pas enregistrée.
+- **Stockage serveur partagé** (Netlify Functions + Blobs, `netlify/functions/scenarios.mjs`) : les scénarios enregistrés sont visibles par tous les formateurs, sur tous les appareils.
+- **Code formateur** : demandé seulement pour créer, modifier, supprimer ou enregistrer. Il est vérifié **par le serveur** (variable `FORMATEUR_CODE`), jamais écrit dans le code. Après 5 essais ratés, blocage de 15 minutes. Le navigateur ne garde qu'un jeton de 2 heures.
+- **Le DAE ne conseille un choc que sur FV ou TV** (dans la limite du nombre de chocs prévu) ; le formateur peut toujours imposer un résultat.
+- **PNI non mesurable** : si la PNI vaut 0, la mesure se termine par des tirets.
+- **Résumé pour le débriefing** (calculé à partir du journal) : délais, analyses, chocs, cycles de RCP, PNI.
+- **Copyright et disclaimer** : pied de page de l'accueil et de la page formateur (`src/components/Footer.jsx`).
+
+### Réglage unique dans Netlify (obligatoire pour enregistrer des scénarios)
+
+1. Netlify > votre site > **Site configuration** > **Environment variables** > **Add a variable**.
+2. Nom : `FORMATEUR_CODE` ; valeur : le code formateur (chiffres). Ne le notez pas dans le dépôt GitHub.
+3. Enregistrez, puis relancez un déploiement (**Deploys** > **Trigger deploy**). Une variable n'est prise en compte qu'au déploiement suivant.
+
+Sans ce réglage, la lecture des scénarios fonctionne mais l'enregistrement est refusé (« code formateur non configuré »).
 
 ## Ajouts de l'étape 4 : télécommande du formateur
 
@@ -111,13 +132,15 @@ Il n'y a pas de QR code : seul le code à 4 chiffres est utilisé. Le formateur 
 ## Structure
 
 ```
+netlify/functions/   scenarios.mjs (stockage partagé + code formateur)
+public/sounds/       pni.mp3 (pompe PNI)
 src/
   pages/        Hub, TrainerPage (formateur), TraineePage (stagiaire)
   components/   StatusBadge, Diagnostic, TrainerPanel (provisoire), lp15/ (face avant : Device, Screen, icônes, CSS)
   hooks/        useHostSession, useGuestSession, useDsa (séquence DSA), useDsaAudio (sons et voix), useNow, useFitScale, useWakeLock
-  services/     session (PIN, PeerJS), messages (protocole), peerConfig, audio (sons et voix)
-  engine/       dsaMachine (états), rhythms (tracés), viewModel (ce que l'écran affiche), hostState, lp15Texts, dsaTimings, referenceValues
-  scenarios/    mspTypes (liste des types de MSP)
+  services/     session (PIN, PeerJS), messages (protocole), peerConfig, audio (sons et voix), scenarioApi (serveur)
+  engine/       dsaMachine (états), rhythms (tracés), ramps (évolutions), runner (scénario en cours), debrief, viewModel (ce que l'écran affiche), hostState, lp15Texts, dsaTimings, referenceValues
+  scenarios/    starters (32 scénarios de départ), scenarioModel (validation, partagé avec le serveur)
 ```
 
 ## Valeurs de référence (RTN secourisme, juillet 2026)

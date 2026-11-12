@@ -93,13 +93,31 @@ export function metronomeClick(faint = false) {
   tone(SOUND.metronomeHz, SOUND.metronomeMs, { gain: faint ? 0.12 : 0.4 });
 }
 
-// Cloche d'avertissement « en 3 temps » avant les insufflations (3 frappes rapprochées)
+// Cloche d'avertissement « en 3 temps » avant les insufflations, reproduite d'après rcp_bip.mp3 :
+// un fond continu à 1119 Hz et 3 sons à 2885 Hz de plus en plus courts et faibles (durées ≈ 180, 140 et 70 ms),
+// le tout démarrant 40 ms après le clic du métronome de ce battement.
+function envelopeTone(freq, points, gainScale = 1) {
+  const c = ensure();
+  if (!c || muted) return;
+  const t0 = c.currentTime;
+  const o = c.createOscillator();
+  const g = c.createGain();
+  o.type = 'sine';
+  o.frequency.value = freq;
+  g.gain.setValueAtTime(0, t0);
+  points.forEach(([t, v]) => g.gain.linearRampToValueAtTime(v * gainScale, t0 + t));
+  o.connect(g).connect(master);
+  o.start(t0);
+  o.stop(t0 + points[points.length - 1][0] + 0.02);
+}
 export function bell() {
-  [0, 0.3, 0.47].forEach((when, i) => {
-    const g = [0.7, 0.4, 0.35][i];
-    tone(SOUND.bellHz, 280, { gain: g, when });
-    tone(SOUND.bellHz2, 280, { gain: g * 0.25, when });
-  });
+  metronomeClick(); // le battement du métronome est joué normalement
+  envelopeTone(SOUND.bellHz, [
+    [0.03, 0], [0.05, 0.55], [0.2, 0.55], [0.24, 0], // 1er son
+    [0.26, 0], [0.28, 0.42], [0.38, 0.42], [0.41, 0], // 2e son
+    [0.45, 0], [0.47, 0.34], [0.5, 0.34], [0.54, 0], // 3e son
+  ]);
+  envelopeTone(SOUND.bellHz2, [[0.03, 0], [0.05, 0.2], [0.5, 0.2], [0.54, 0]]);
 }
 
 // Insufflation : son grave de 1,2 s qui s'atténue

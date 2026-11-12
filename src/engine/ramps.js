@@ -4,7 +4,8 @@
 
 import { RHYTHM_HR } from './rhythms.js';
 
-export const VITAL_LIMITS = { hr: [0, 250], spo2: [0, 100], sys: [30, 260], dia: [10, 180] };
+// sys/dia à 0 = « non mesurable » (la PNI affiche des tirets)
+export const VITAL_LIMITS = { hr: [0, 250], spo2: [0, 100], sys: [0, 260], dia: [0, 180] };
 export const VITAL_LABELS = {
   hr: 'FC (bpm)',
   spo2: 'SpO2 (%)',
@@ -48,7 +49,15 @@ export function applyRhythm(host, rhythm) {
 export function advance(host, now) {
   const ramps = host.ramps ?? [];
   const scheduled = host.scheduled ?? [];
-  if (!ramps.length && !scheduled.length) return { patch: null, events: [] };
+  const scn = host.scenario;
+  if (scn?.status === 'paused') return { patch: null, events: [] }; // scénario en pause : tout est figé
+  if (!ramps.length && !scheduled.length) {
+    // Chronologie terminée : le scénario passe à « terminé »
+    if (scn?.status === 'running') {
+      return { patch: { scenario: { ...scn, status: 'done' } }, events: [{ action: 'Scénario', detail: 'Chronologie terminée' }] };
+    }
+    return { patch: null, events: [] };
+  }
 
   const events = [];
   let vitals = host.vitals;
@@ -86,9 +95,15 @@ export function advance(host, now) {
       nextScheduled.push(sc);
       continue;
     }
-    rhythm = sc.rhythm;
-    vitals = { ...vitals, hr: RHYTHM_HR[sc.rhythm] ?? vitals.hr };
-    events.push({ action: 'Rythme', detail: `Rythme programmé appliqué : ${sc.rhythm}` });
+    if (sc.set) {
+      const clean = Object.fromEntries(Object.entries(sc.set).map(([k, v]) => [k, clampVital(k, v)]));
+      vitals = { ...vitals, ...clean };
+      events.push({ action: 'Constantes', detail: `Valeurs imposées : ${Object.entries(clean).map(([k, v]) => `${k} ${v}`).join(', ')}` });
+    } else {
+      rhythm = sc.rhythm;
+      vitals = { ...vitals, hr: RHYTHM_HR[sc.rhythm] ?? vitals.hr };
+      events.push({ action: 'Rythme', detail: `Rythme programmé appliqué : ${sc.rhythm}` });
+    }
     changed = true;
   }
 

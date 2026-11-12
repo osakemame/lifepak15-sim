@@ -17,6 +17,9 @@ export const RHYTHMS = {
 
 export const DEFAULT_RHYTHM = 'sinus';
 
+// Rythmes pour lesquels le DAE conseille un choc (tant que le nombre de chocs prévu n'est pas atteint)
+export const SHOCKABLE = ['fv', 'tv'];
+
 // FC type proposée quand on choisit un rythme (le formateur peut ensuite la modifier).
 // FV et asystolie : 0 (l'écran affiche alors « --- »). À confirmer avec l'utilisateur.
 export const RHYTHM_HR = { sinus: 75, tachy: 140, brady: 38, stemi: 85, bav: 36, tv: 190, fv: 0, asystolie: 0, aesp: 60 };

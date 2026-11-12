@@ -2,6 +2,10 @@
   command = "npm run build"
   publish = "dist"
 
+# Fonctions serveur (scénarios partagés)
+[functions]
+  directory = "netlify/functions"
+
 # Application monopage : toute URL renvoie vers index.html
 # (permet les liens du type https://votre-site.netlify.app/?pin=1234)
 [[redirects]]

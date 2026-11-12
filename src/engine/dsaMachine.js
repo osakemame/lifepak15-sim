@@ -11,6 +11,7 @@
 //   rcp (2:00 -> 0:00) -> awaitAnalyse (« Appuyer sur ANALYSE »), le stagiaire doit rappuyer sur ANALYSE.
 
 import { SHOCK_JOULES } from './lp15Texts.js';
+import { SHOCKABLE } from './rhythms.js';
 
 export const initialState = () => ({
   phase: 'surveillance',
@@ -36,13 +37,15 @@ export function cuffAt(p, sys) {
 
 // Résultat de la prochaine analyse, décidé par le scénario du formateur :
 //  - 'forceNext' (choc conseillé / non conseillé) s'applique une seule fois, à la prochaine analyse ;
-//  - sinon : « choc conseillé » tant que le nombre de chocs prévus n'est pas atteint.
+//  - sinon : « choc conseillé » si le rythme est choquable et tant que le nombre de chocs prévus n'est pas atteint.
 export function decideAdvised(host, s) {
   const { forceNext, forceId, shocksPlanned } = host.dsa;
   if (forceNext !== 'auto' && forceId !== s.consumedForceId) {
     return { advised: forceNext === 'advised', forceId };
   }
-  return { advised: s.shocksDelivered < shocksPlanned, forceId: s.consumedForceId };
+  // Le DAE ne conseille un choc que sur un rythme choquable (FV, TV) ; le formateur peut toujours l'imposer.
+  const shockable = SHOCKABLE.includes(host.rhythm);
+  return { advised: shockable && s.shocksDelivered < shocksPlanned, forceId: s.consumedForceId };
 }
 
 const startAnalysis = (s) => ({

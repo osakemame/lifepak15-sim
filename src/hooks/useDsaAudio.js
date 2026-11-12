@@ -73,7 +73,7 @@ export function useDsaAudio({ s, host }) {
     };
     const tick = () => {
       count += 1;
-      if (cycle && count === cycle - 2) audio.bell();
+      if (cycle && count === cycle - 2) audio.bell(); // joue aussi le clic du battement
       else audio.metronomeClick();
       if (cycle && count >= cycle) {
         count = 0;

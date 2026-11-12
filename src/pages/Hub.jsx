@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { MSP_TYPES } from '../scenarios/mspTypes.js';
+import Footer from '../components/Footer.jsx';
 import { isValidPin } from '../services/session.js';
 
 // Page d'accueil : le formateur crée une session, le stagiaire la rejoint avec le code à 4 chiffres.
 export default function Hub({ initialPin = '', onCreate, onJoin }) {
   const [mode, setMode] = useState(initialPin ? 'join' : null); // null | 'create' | 'join'
-  const [mspType, setMspType] = useState(MSP_TYPES[0].id);
   const [pin, setPin] = useState(initialPin);
 
   const pinOk = isValidPin(pin);
@@ -30,26 +29,10 @@ export default function Hub({ initialPin = '', onCreate, onJoin }) {
 
       {mode === 'create' && (
         <div className="w-full max-w-sm flex flex-col gap-4">
-          <label className="text-sm text-gray-300" htmlFor="msp">
-            Type de mise en situation (MSP)
-          </label>
-          <select
-            id="msp"
-            className="rounded-lg bg-anthracite-800 border border-anthracite-600 p-3 text-base"
-            value={mspType}
-            onChange={(e) => setMspType(e.target.value)}
-          >
-            {MSP_TYPES.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.label}
-              </option>
-            ))}
-          </select>
-          <p className="text-xs text-gray-500">
-            Le contenu détaillé des scénarios (constantes, rythmes, événements) sera ajouté à une
-            étape suivante.
+          <p className="text-sm text-gray-300">
+            Un code à 4 chiffres sera créé. Vous choisirez le scénario (MSP) sur la page du formateur.
           </p>
-          <button className="btn btn-primary" onClick={() => onCreate(mspType)}>
+          <button className="btn btn-primary" onClick={() => onCreate(null)}>
             Créer la session
           </button>
           <button className="btn" onClick={() => setMode(null)}>
@@ -81,6 +64,7 @@ export default function Hub({ initialPin = '', onCreate, onJoin }) {
           </button>
         </div>
       )}
+      <Footer />
     </div>
   );
 }
